@@ -356,7 +356,6 @@ local function aura()
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
             local stunStick = char.StunStick
             stunStick.Event:FireServer("S")  
-            task.wait()
             stunStick.Event:FireServer("H", rake.Head)  
         end
     end
@@ -365,10 +364,9 @@ end
 -- Start a continuous loop for the aura
 local function startAuraLoop()
     coroutine.wrap(function()
-        while true do
+        runservice.RenderStepped:Connect(function()
             aura()
-            wait()
-        end
+        end)
     end)()
 end
 
