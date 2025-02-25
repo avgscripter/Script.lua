@@ -224,31 +224,6 @@ function toggleHighlight(object, name, pp, color, state)
     end
 end
 
-local function aura()
-    if stunstick == true then  
-        if game.Players.LocalPlayer.Character:FindFirstChild("StunStick") and rake ~= nil then  
-	        local args = {
-		    [1] = "S"
-	        }
-	
-	        game.Players.LocalPlayer.Character.StunStick.Event:FireServer(unpack(args))
-            task.wait()
-	        local args = {
-		    [1] = "H",
-		    [2] = workspace.Rake:FindFirstChild("Head")
-            }
-	        game.Players.LocalPlayer.Character.StunStick.Event:FireServer(unpack(args))
-        end
-    end
-end
-coroutine.wrap(function()
-	while true do
-		aura()
-		wait()
-	end
-end)()
-
-
 local function scrapesp()
         if ScrapE == true then
             local scrapspawn = workspace.Filter.ScrapSpawns:GetChildren()
@@ -367,12 +342,51 @@ end)
 
 local Combat = _G.Main.createFrame(sapien,UDim2.new(0.353, -49,0.345, 5),nil,"Combat","CombatFrame")
 
-local stunbut = _G.Main.createButton(Combat,"StunStickAura",function()
-    if stunstick == false then
-		stunstick = true
+local function getRake()
+    return workspace:FindFirstChild("Rake") -- Find the latest Rake instance
+end
 
-	else stunstick = false
-	end
+
+local function aura()
+    if stunstick then  
+        local rake = getRake()  
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+
+        if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
+            local stunStick = char.StunStick
+            stunStick.Event:FireServer("S")  
+            task.wait()
+            stunStick.Event:FireServer("H", rake.Head)  
+        end
+    end
+end
+
+-- Start a continuous loop for the aura
+local function startAuraLoop()
+    coroutine.wrap(function()
+        while true do
+            aura()
+            wait()
+        end
+    end)()
+end
+
+-- Ensure the aura loop is running
+startAuraLoop()
+
+-- Button to toggle the StunStick Aura on/off
+local stunbut = _G.Main.createButton(Combat, "StunStickAura", function()
+    stunstick = not stunstick -- Toggle the state
+    print("StunStickAura is now", stunstick and "ON" or "OFF")
+end)
+
+-- Detect when the round resets and restart the aura loop
+game.Workspace.ChildAdded:Connect(function(child)
+    if child.Name == "Rake" then
+        print("New Rake detected! Restarting aura loop...")
+        startAuraLoop()
+    end
 end)
 
 -- Services
