@@ -401,9 +401,9 @@ local function antiHit(character)
         if Rake and Rake:FindFirstChild("HumanoidRootPart") and Fly == true then
             local rakeRootPart = Rake.HumanoidRootPart
             local distance = (rootPart.Position - rakeRootPart.Position).Magnitude
-            if distance < 3 then
+            if distance < 5 then
                 local direction = (rootPart.Position - rakeRootPart.Position).Unit
-                local newPosition = rakeRootPart.Position - direction * 4
+                local newPosition = rakeRootPart.Position - direction * 8
                 rootPart.CFrame = CFrame.new(newPosition)
                 
                 -- Update the camera to look behind the Rake
