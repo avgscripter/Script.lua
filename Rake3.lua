@@ -698,7 +698,7 @@ local TextButton = Instance.new("TextButton")
 
 --Properties:
 
-Frame.Parent = game.Players.LocalPlayer.PlayerGui
+Frame.Parent = sapien
 Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 Frame.BorderSizePixel = 0
