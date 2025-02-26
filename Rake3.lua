@@ -357,6 +357,7 @@ local function aura()
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
             local stunStick = char.StunStick
             stunStick.Event:FireServer("S")  
+            task.wait()
             stunStick.Event:FireServer("H", rake.Head)  
         end
     end
