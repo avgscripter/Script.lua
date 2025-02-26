@@ -702,7 +702,7 @@ Frame.Parent = game.Players.LocalPlayer.PlayerGui
 Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 Frame.BorderSizePixel = 0
-Frame.Position = UDim2.new(0.383246243, 89, 0.178770944, -6)
+Frame.Position = UDim2.new(0.383246243, 0, 0.178770944, 0)
 Frame.Size = UDim2.new(0.0867407024, 0, 0.0500000007, 0)
 
 TextButton.Parent = Frame
