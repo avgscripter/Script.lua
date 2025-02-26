@@ -152,6 +152,7 @@ TextButton.MouseButton1Click:Connect(function()
 end)
 
 local w1 = Instance.new("ScreenGui",game.Players.LocalPlayer.PlayerGui)
+w1.ResetOnSpawn = false
 --variables
 local runservice = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -360,14 +361,12 @@ local function aura()
         end
     end
 end
-
+local con
 -- Start a continuous loop for the aura
 local function startAuraLoop()
-    coroutine.wrap(function()
-        runservice.RenderStepped:Connect(function()
+      con = runservice.RenderStepped:Connect(function()
             aura()
-        end)
-    end)()
+	end)
 end
 
 -- Ensure the aura loop is running
@@ -383,6 +382,8 @@ end)
 game.Workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
         print("New Rake detected! Restarting aura loop...")
+	con:Disconnect()
+	con = nil
         startAuraLoop()
     end
 end)
@@ -413,9 +414,9 @@ local function antiHit(character)
         if Rake and Rake:FindFirstChild("HumanoidRootPart") and Fly == true then
             local rakeRootPart = Rake.HumanoidRootPart
             local distance = (rootPart.Position - rakeRootPart.Position).Magnitude
-            if distance < 5 then
+            if distance <= 5 then
                 local direction = (rootPart.Position - rakeRootPart.Position).Unit
-                local newPosition = rakeRootPart.Position - direction * 8
+                local newPosition = rakeRootPart.Position - direction * 6
                 rootPart.CFrame = CFrame.new(newPosition)
                 
                 -- Update the camera to look behind the Rake
@@ -697,7 +698,7 @@ local TextButton = Instance.new("TextButton")
 
 --Properties:
 
-Frame.Parent = game.StarterGui.ScreenGui
+Frame.Parent = game.Players.LocalPlayer.PlayerGui
 Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 Frame.BorderSizePixel = 0
