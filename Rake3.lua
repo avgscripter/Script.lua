@@ -358,8 +358,7 @@ local function aura()
             local stunStick = char.StunStick
             stunStick.Event:FireServer("S")  
             task.wait(0.3)
-            stunStick.Event:FireServer("H", rake.Head)  
-	    task.wait(0.1)
+            stunStick.Event:FireServer("H", rake.Head)
         end
     end
 end
