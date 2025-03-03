@@ -342,6 +342,7 @@ runservice.RenderStepped:Connect(function()
 end)
 
 local Combat = _G.Main.createFrame(sapien,UDim2.new(0.353, -49,0.345, 5),nil,"Combat","CombatFrame")
+
 local con
 
 -- Function to dynamically get the latest Rake instance
@@ -349,7 +350,7 @@ local function getRake()
     return workspace:FindFirstChild("Rake")
 end
 
--- Improved aura function with full lock stun
+-- Improved aura function (with Heartbeat)
 local function aura()
     if stunstick then  
         local rake = getRake()
@@ -359,17 +360,17 @@ local function aura()
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
             local stunStick = char.StunStick
 
-            -- Spam the stun even faster
-            for i = 1, 6 do  -- Fire 6 times per frame for extra reliability
+            -- Use 3 stun calls per frame (like before)
+            for i = 1, 3 do  
                 stunStick.Event:FireServer("S")  
                 stunStick.Event:FireServer("H", rake.Head)
-                task.wait(0.02)  -- Super short delay to prevent gaps
+                task.wait(0.02)  -- Tiny delay to prevent overload
             end
         end
     end
 end
 
--- Start a continuous loop for the aura
+-- Start a continuous loop for the aura using Heartbeat
 local function startAuraLoop()
     if con then con:Disconnect() end -- Ensure previous connection is stopped
 
@@ -397,8 +398,10 @@ end)
 game.Workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
         print("New Rake detected! Restarting aura loop...")
-        if con then con:Disconnect() end
-        startAuraLoop()
+        task.wait(1)  -- Small delay to ensure Rake is fully loaded
+        if stunstick then
+            startAuraLoop()
+        end
     end
 end)
 
