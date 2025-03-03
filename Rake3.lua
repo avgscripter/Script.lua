@@ -342,14 +342,14 @@ runservice.RenderStepped:Connect(function()
 end)
 
 local Combat = _G.Main.createFrame(sapien,UDim2.new(0.353, -49,0.345, 5),nil,"Combat","CombatFrame")
-
 local con
+
 -- Function to dynamically get the latest Rake instance
 local function getRake()
     return workspace:FindFirstChild("Rake")
 end
 
--- Improved aura function
+-- Improved aura function with full lock stun
 local function aura()
     if stunstick then  
         local rake = getRake()
@@ -358,11 +358,12 @@ local function aura()
 
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
             local stunStick = char.StunStick
-            -- Fire multiple times rapidly to ensure stun
-            for i = 1, 3 do
+
+            -- Spam the stun even faster
+            for i = 1, 6 do  -- Fire 6 times per frame for extra reliability
                 stunStick.Event:FireServer("S")  
                 stunStick.Event:FireServer("H", rake.Head)
-                task.wait(0.05)  -- Very short delay to spam faster
+                task.wait(0.02)  -- Super short delay to prevent gaps
             end
         end
     end
@@ -372,7 +373,7 @@ end
 local function startAuraLoop()
     if con then con:Disconnect() end -- Ensure previous connection is stopped
 
-    con = runservice.RenderStepped:Connect(function()
+    con = runservice.Heartbeat:Connect(function()
         aura()
     end)
 end
@@ -391,15 +392,24 @@ local stunbut = _G.Main.createButton(Combat, "StunStickAura", function()
         if con then con:Disconnect() end  -- Stop the loop when disabled
     end
 end)
--- Detect when the round resets and restart the aura loop
+
+-- Auto-restart when a new Rake spawns (round reset detection)
 game.Workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
         print("New Rake detected! Restarting aura loop...")
-	con:Disconnect()
-	con = nil
+        if con then con:Disconnect() end
         startAuraLoop()
     end
 end)
+
+-- Auto-restart after death (so you don’t lose the stun when you respawn)
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)  -- Small delay to allow the character to load
+    if stunstick then
+        startAuraLoop()  -- Restart aura automatically after respawn
+    end
+end)
+
 
 -- Services
 local Players = game:GetService("Players")
