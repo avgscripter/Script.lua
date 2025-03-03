@@ -343,31 +343,38 @@ end)
 
 local Combat = _G.Main.createFrame(sapien,UDim2.new(0.353, -49,0.345, 5),nil,"Combat","CombatFrame")
 
+local con
+-- Function to dynamically get the latest Rake instance
 local function getRake()
-    return workspace:FindFirstChild("Rake") -- Find the latest Rake instance
+    return workspace:FindFirstChild("Rake")
 end
 
-
+-- Improved aura function
 local function aura()
     if stunstick then  
-        local rake = getRake()  
+        local rake = getRake()
         local player = game.Players.LocalPlayer
         local char = player.Character
 
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
             local stunStick = char.StunStick
-            stunStick.Event:FireServer("S")  
-            task.wait(0.3)
-            stunStick.Event:FireServer("H", rake.Head)
+            -- Fire multiple times rapidly to ensure stun
+            for i = 1, 3 do
+                stunStick.Event:FireServer("S")  
+                stunStick.Event:FireServer("H", rake.Head)
+                task.wait(0.05)  -- Very short delay to spam faster
+            end
         end
     end
 end
-local con
+
 -- Start a continuous loop for the aura
 local function startAuraLoop()
-      con = runservice.RenderStepped:Connect(function()
-            aura()
-	end)
+    if con then con:Disconnect() end -- Ensure previous connection is stopped
+
+    con = runservice.RenderStepped:Connect(function()
+        aura()
+    end)
 end
 
 -- Ensure the aura loop is running
@@ -377,8 +384,13 @@ startAuraLoop()
 local stunbut = _G.Main.createButton(Combat, "StunStickAura", function()
     stunstick = not stunstick -- Toggle the state
     print("StunStickAura is now", stunstick and "ON" or "OFF")
-end)
 
+    if stunstick then
+        startAuraLoop()  -- Restart the aura loop when enabled
+    else
+        if con then con:Disconnect() end  -- Stop the loop when disabled
+    end
+end)
 -- Detect when the round resets and restart the aura loop
 game.Workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
