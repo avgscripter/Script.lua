@@ -435,12 +435,12 @@ local BounceHeight = 7
 local BounceSpeed = 100
 local BehindDistance = 5
 local CollisionCheckDistance = 4
-
+local sg = Instance.new("ScreenGui",lplr.PlayerGui)
 local StrafeGUI = Instance.new("Frame")
 StrafeGUI.Size = UDim2.new(0, 200, 0, 100)
 StrafeGUI.Position = UDim2.new(0.5, -100, 0.4, 0)
 StrafeGUI.BackgroundColor3 = Color3.fromRGB(49, 49, 49)
-StrafeGUI.Parent = sapien
+StrafeGUI.Parent = ss
 StrafeGUI.Visible = false
 StrafeGUI.Active = true
 StrafeGUI.Draggable = true
