@@ -440,7 +440,7 @@ local StrafeGUI = Instance.new("Frame")
 StrafeGUI.Size = UDim2.new(0, 200, 0, 100)
 StrafeGUI.Position = UDim2.new(0.5, -100, 0.4, 0)
 StrafeGUI.BackgroundColor3 = Color3.fromRGB(49, 49, 49)
-StrafeGUI.Parent = ss
+StrafeGUI.Parent = sg
 StrafeGUI.Visible = false
 StrafeGUI.Active = true
 StrafeGUI.Draggable = true
@@ -601,7 +601,7 @@ if player.Character then
     updateCharacter(player.Character)
 end
 
-local FlyGUI = Instance.new("Frame", sapien)
+local FlyGUI = Instance.new("Frame",sg)
 FlyGUI.Size = UDim2.new(0.1, 0, 0.1, 0)
 FlyGUI.Position = UDim2.new(0.85, 0, 0.4, 0)
 FlyGUI.BackgroundTransparency = 1
@@ -624,7 +624,7 @@ DownButton.TextScaled = true
 DownButton.Parent = FlyGUI
 
 local function getGroundHeight()
-    local ray = Ray.new(root.Position, Vector3.new(0, -100, 0)) -- Cast downwards
+    local ray = Ray.new(root.Position, Vector3.new(0, -1000000000, 0)) -- Cast downwards
     local hit, pos = workspace:FindPartOnRayWithIgnoreList(ray, {character})
     return hit and pos.Y or root.Position.Y
 end
