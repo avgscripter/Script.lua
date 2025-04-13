@@ -857,8 +857,6 @@ local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
         end
     end
 end)
-end)
-end
 
 
 TextButton2.MouseButton1Click:Connect(function()
