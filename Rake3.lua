@@ -738,6 +738,64 @@ local thirdPersonButton = _G.Main.createButton(World, "Third Person", function()
     end
 end)
 
+local pointsExploitEnabled = false
+local exploitGui = nil
+local exploitConnection = nil
+
+local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", function()
+    pointsExploitEnabled = not pointsExploitEnabled
+
+    if pointsExploitEnabled then
+        exploitGui = Instance.new("ScreenGui")
+        exploitGui.Name = "ExploitGui"
+        exploitGui.ResetOnSpawn = false
+        exploitGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 200, 0, 100)
+        frame.Position = UDim2.new(0, 50, 0, 300)
+        frame.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+        frame.BorderSizePixel = 0
+        frame.Active = true
+        frame.Parent = exploitGui
+			
+        local dragDetector = Instance.new("UIDragDetector")
+        dragDetector.Parent = frame
+
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, 0, 0, 50)
+        button.Position = UDim2.new(0, 0, 0.25, 0)
+        button.Text = "Points Exploit"
+        button.Font = Enum.Font.SourceSansBold
+        button.TextSize = 20
+        button.BackgroundColor3 = Color3.fromRGB(0, 85, 200)
+        button.TextColor3 = Color3.new(1, 1, 1)
+        button.Parent = frame
+
+        exploitConnection = button.MouseButton1Click:Connect(function()
+            local args = {
+                [1] = "SellScraps",
+                [2] = "Scraps"
+            }
+
+            local times = math.random(10000, 15000)
+            for i = 1, times do
+                game:GetService("ReplicatedStorage"):WaitForChild("ShopEvent"):FireServer(unpack(args))
+            end
+        end)
+    else
+        if exploitConnection then
+            exploitConnection:Disconnect()
+            exploitConnection = nil
+        end
+
+        if exploitGui then
+            exploitGui:Destroy()
+            exploitGui = nil
+        end
+    end
+end)
+
 TextButton2.MouseButton1Click:Connect(function()
 	sapien.Enabled = not sapien.Enabled
 end)
