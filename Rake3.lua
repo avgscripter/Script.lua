@@ -400,7 +400,7 @@ game.Workspace.ChildAdded:Connect(function(child)
             startAuraLoop()
         end
     end
-end)
+ end)
 
 -- Auto-restart after death (so you don’t lose the stun when you respawn)
 game.Players.LocalPlayer.CharacterAdded:Connect(function()
@@ -410,6 +410,84 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Variables
+local Fly = false
+local connection121
+local antiHitPart
+local touchConnection
+
+-- Helper function to check if a player is alive
+local function IsAlive(player)
+	return player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
+end
+
+-- Anti-hit function
+local function antiHit(character)
+	if connection121 then
+		connection121:Disconnect()
+	end
+
+	local rootPart = character:WaitForChild("HumanoidRootPart")
+
+	connection121 = RunService.RenderStepped:Connect(function()
+		local Rake = workspace:FindFirstChild("Rake")
+		if Fly and Rake and Rake:FindFirstChild("HumanoidRootPart") then
+			local rakeRoot = Rake.HumanoidRootPart
+
+			-- Setup antiHitPart once
+			if not antiHitPart then
+				antiHitPart = Instance.new("Part")
+				antiHitPart.Name = "AntiHitBarrier"
+				antiHitPart.Size = Vector3.new(4, 4, 4)
+				antiHitPart.Anchored = true
+				antiHitPart.CanCollide = true
+				antiHitPart.Transparency = 1
+				antiHitPart.Parent = workspace
+
+				touchConnection = antiHitPart.Touched:Connect(function(hit)
+					if hit:IsDescendantOf(character) and IsAlive(LocalPlayer) then
+						local behindPosition = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
+						rootPart.CFrame = CFrame.new(behindPosition)
+						Camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
+					end
+				end)
+			end
+
+			-- Update antiHitPart position above Rake
+			antiHitPart.CFrame = rakeRoot.CFrame + Vector3.new(0, 3, 0)
+
+		elseif antiHitPart then
+			-- Cleanup when Fly is disabled or Rake is gone
+			if touchConnection then
+				touchConnection:Disconnect()
+				touchConnection = nil
+			end
+			antiHitPart:Destroy()
+			antiHitPart = nil
+		end
+	end)
+end
+
+-- Initialize on character spawn
+LocalPlayer.CharacterAdded:Connect(function(character)
+	antiHit(character)
+end)
+
+-- Initialize if character is already loaded
+if LocalPlayer.Character then
+	antiHit(LocalPlayer.Character)
+end
+
+-- Create the Toggle Button
+local flybut = _G.Main.createButton(Combat, "AntiHit", function()
+	Fly = not Fly
+end)
 
 --Visuals
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
@@ -551,7 +629,7 @@ local function updateFlareGunHighlights()
         local flareGun = flareGunPickUp:FindFirstChild("FlareGun")
         if flareGun then
             if FlareE then
-                if not flareGun:FindFirstChild("Highlight") then
+           if not flareGun:FindFirstChild("Highlight") then
                     toggleHighlight(flareGun, "Flaregun", flareGun, Color3.new(255, 255, 255), true)
                 end
             else
@@ -587,7 +665,7 @@ local function cleanUpPlayerHighlights()
         if char then 
             if char:FindFirstChild("Highlight") and player ~= game.Players.LocalPlayer then
                 toggleHighlight(char, char.Name, char.Head, Color3.new(0, 0, 255), false)
-            end
+end
         end    
     end
 end
@@ -779,7 +857,6 @@ local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
         end
     end
 end)
-end)
 TextButton2.MouseButton1Click:Connect(function()
 	sapien.Enabled = not sapien.Enabled
 end)
@@ -814,7 +891,6 @@ TextButton.TextColor3 = Color3.fromRGB(6, 38, 249)
 TextButton.TextScaled = true
 TextButton.TextSize = 14.000
 TextButton.TextWrapped = true
-
 
 
 TextButton.MouseButton1Click:Connect(function()
