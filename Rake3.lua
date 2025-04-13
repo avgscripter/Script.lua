@@ -359,13 +359,11 @@ local function aura()
 
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
             local stunStick = char.StunStick
-
-            -- Use 3 stun calls per frame (like before)
-            for i = 1, 3 do  
+            for i = 1, 4 do  
                 stunStick.Event:FireServer("S")  
                 stunStick.Event:FireServer("H", rake.Head)
-                task.wait(0.02)  -- Tiny delay to prevent overload
             end
+	     wait(0.1)
         end
     end
 end
@@ -403,6 +401,25 @@ game.Workspace.ChildAdded:Connect(function(child)
             startAuraLoop()
         end
     end
+ local instaKillEnabled = false
+local instaKillConnection = nil
+
+local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
+    instaKillEnabled = not instaKillEnabled
+
+    if instaKillEnabled then
+        instaKillConnection = runservice.RenderStepped:Connect(function()
+            if rake and rake:FindFirstChild("Monster") then
+                rake.Monster.Health = 0
+            end
+        end)
+    else
+        if instaKillConnection then
+            instaKillConnection:Disconnect()
+            instaKillConnection = nil
+        end
+    end
+end)
 end)
 
 -- Auto-restart after death (so you don’t lose the stun when you respawn)
@@ -467,7 +484,6 @@ end
 -- Create the Fly button
 local flybut = _G.Main.createButton(Combat, "AntiHit", function()
     Fly = not Fly
-    print("Fly status changed to:", Fly) -- Debugging statement to check Fly status
 end)
 
 print("Script initialized") -- Debugging statement to check if script runs
