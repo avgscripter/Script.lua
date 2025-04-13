@@ -383,7 +383,6 @@ startAuraLoop()
 -- Button to toggle the StunStick Aura on/off
 local stunbut = _G.Main.createButton(Combat, "StunStickAura", function()
     stunstick = not stunstick -- Toggle the state
-    print("StunStickAura is now", stunstick and "ON" or "OFF")
 
     if stunstick then
         startAuraLoop()  -- Restart the aura loop when enabled
@@ -432,21 +431,42 @@ local function antiHit(character)
     end
 
     local rootPart = character:WaitForChild("HumanoidRootPart")
+    local camera = workspace.CurrentCamera
+    local antiHitPart = nil
+    local touchConnection = nil
 
-    connection121 = runservice.RenderStepped:Connect(function(deltaTime)
+    connection121 = runservice.RenderStepped:Connect(function()
         local Rake = workspace:FindFirstChild("Rake")
         if Rake and Rake:FindFirstChild("HumanoidRootPart") and Fly == true then
-            local rakeRootPart = Rake.HumanoidRootPart
-            local distance = (rootPart.Position - rakeRootPart.Position).Magnitude
-            if distance <= 5 then
-                local direction = (rootPart.Position - rakeRootPart.Position).Unit
-                local newPosition = rakeRootPart.Position - direction * 6
-                rootPart.CFrame = CFrame.new(newPosition)
-                
-                -- Update the camera to look behind the Rake
-                local camera = Workspace.CurrentCamera
-                camera.CFrame = CFrame.new(camera.CFrame.Position, rakeRootPart.Position)
-                camera.CFrame = CFrame.new(rootPart.Position, rakeRootPart.Position)
+            local rakeRoot = Rake.HumanoidRootPart
+            local direction = (rootPart.Position - rakeRoot.Position).Unit
+            local teleportPos = rakeRoot.Position - direction * 6
+
+            if not antiHitPart then
+                antiHitPart = Instance.new("Part")
+                antiHitPart.Name = "AntiHitBarrier"
+                antiHitPart.Size = Vector3.new(4, 4, 4)
+                antiHitPart.Anchored = true
+                antiHitPart.CanCollide = true
+                antiHitPart.Transparency = 1
+                antiHitPart.Parent = workspace
+
+                touchConnection = antiHitPart.Touched:Connect(function(hit)
+                    if hit:IsDescendantOf(character) then
+                        rootPart.CFrame = CFrame.new(teleportPos)
+                        camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
+                    end
+                end)
+            end
+
+            antiHitPart.CFrame = CFrame.new(rakeRoot.Position + Vector3.new(0, 3, 0)) -- keep it just above Rake
+
+        elseif antiHitPart then
+            antiHitPart:Destroy()
+            antiHitPart = nil
+            if touchConnection then
+                touchConnection:Disconnect()
+                touchConnection = nil
             end
         end
     end)
