@@ -746,25 +746,43 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
     pointsExploitEnabled = not pointsExploitEnabled
 
     if pointsExploitEnabled then
+        -- Create GUI
         exploitGui = Instance.new("ScreenGui")
         exploitGui.Name = "ExploitGui"
         exploitGui.ResetOnSpawn = false
+        exploitGui.IgnoreGuiInset = true
         exploitGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
+        -- Main Frame
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 200, 0, 100)
-        frame.Position = UDim2.new(0, 50, 0, 300)
+        frame.Size = UDim2.new(0, 220, 0, 110)
+        frame.Position = UDim2.new(0.05, 0, 0.5, -55) -- Left center, good for all screens
+        frame.AnchorPoint = Vector2.new(0, 0.5)
         frame.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
         frame.BorderSizePixel = 0
         frame.Active = true
         frame.Parent = exploitGui
-			
+
+        -- Dragging
         local dragDetector = Instance.new("UIDragDetector")
         dragDetector.Parent = frame
 
+        -- Label
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(200, 0, 0, 100)
+        label.Position = UDim2.new(0, 0, 0, 0)
+        label.Text = "Needs to be near shop (cause lag)"
+        label.Font = Enum.Font.SourceSansBold
+        label.TextWrapped = true
+        label.TextSize = 16
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.BackgroundTransparency = 1
+        label.Parent = frame
+
+        -- Button
         local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, 0, 0, 50)
-        button.Position = UDim2.new(0, 0, 0.25, 0)
+        button.Size = UDim2.new(1, -10, 0, 50)
+        button.Position = UDim2.new(0, 5, 0, 50)
         button.Text = "Points Exploit"
         button.Font = Enum.Font.SourceSansBold
         button.TextSize = 20
