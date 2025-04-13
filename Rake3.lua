@@ -411,81 +411,6 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
 end)
 
 
--- Services
-local Players = game:GetService("Players")
-
--- Variables
-local LocalPlayer = Players.LocalPlayer
-local connection121
-
--- Helper function to check if a player is alive
-local function IsAlive(player)
-    return player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
-end
-
--- Anti-hit function
-local function antiHit(character)
-    if connection121 then
-        connection121:Disconnect()
-    end
-
-    local rootPart = character:WaitForChild("HumanoidRootPart")
-    local camera = workspace.CurrentCamera
-    local antiHitPart = nil
-    local touchConnection = nil
-
-    connection121 = runservice.RenderStepped:Connect(function()
-        local Rake = workspace:FindFirstChild("Rake")
-        if Rake and Rake:FindFirstChild("HumanoidRootPart") and Fly == true then
-            local rakeRoot = Rake.HumanoidRootPart
-            local direction = (rootPart.Position - rakeRoot.Position).Unit
-            local teleportPos = rakeRoot.Position - direction * 6
-
-            if not antiHitPart then
-                antiHitPart = Instance.new("Part")
-                antiHitPart.Name = "AntiHitBarrier"
-                antiHitPart.Size = Vector3.new(4, 4, 4)
-                antiHitPart.Anchored = true
-                antiHitPart.CanCollide = true
-                antiHitPart.Transparency = 1
-                antiHitPart.Parent = workspace
-
-                touchConnection = antiHitPart.Touched:Connect(function(hit)
-                    if hit:IsDescendantOf(character) then
-                        rootPart.CFrame = CFrame.new(teleportPos)
-                        camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
-                    end
-                end)
-            end
-
-            antiHitPart.CFrame = CFrame.new(rakeRoot.Position + Vector3.new(0, 3, 0)) -- keep it just above Rake
-
-        elseif antiHitPart then
-            antiHitPart:Destroy()
-            antiHitPart = nil
-            if touchConnection then
-                touchConnection:Disconnect()
-                touchConnection = nil
-            end
-        end
-    end)
-end
-
--- Connect to CharacterAdded event
-LocalPlayer.CharacterAdded:Connect(function(character)
-    antiHit(character)
-end)
-
--- Initialize for the current character
-if LocalPlayer.Character then
-    antiHit(LocalPlayer.Character)
-end
-
--- Create the Fly button
-local flybut = _G.Main.createButton(Combat, "AntiHit", function()
-    Fly = not Fly
-end)
-
 --Visuals
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
 
@@ -855,7 +780,6 @@ local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
     end
 end)
 end)
-end
 TextButton2.MouseButton1Click:Connect(function()
 	sapien.Enabled = not sapien.Enabled
 end)
