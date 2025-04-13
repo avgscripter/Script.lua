@@ -101,7 +101,7 @@ TextLabel_5.BorderSizePixel = 0
 TextLabel_5.Position = UDim2.new(0.499673337, 0, 0.736731827, 0)
 TextLabel_5.Size = UDim2.new(0.300000012, 0, 0.400000006, 0)
 TextLabel_5.Font = Enum.Font.SourceSans
-TextLabel_5.Text = "URAVGSCRIPTER"
+TextLabel_5.Text = "Sapien community (Join Discord)"
 TextLabel_5.TextColor3 = Color3.fromRGB(0, 4, 254)
 TextLabel_5.TextScaled = true
 TextLabel_5.TextSize = 14.000
@@ -401,26 +401,7 @@ game.Workspace.ChildAdded:Connect(function(child)
             startAuraLoop()
         end
     end
- local instaKillEnabled = false
-local instaKillConnection = nil
-
-local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
-    instaKillEnabled = not instaKillEnabled
-
-    if instaKillEnabled then
-        instaKillConnection = runservice.RenderStepped:Connect(function()
-            if rake and rake:FindFirstChild("Monster") then
-                rake.Monster.Health = 0
-            end
-        end)
-    else
-        if instaKillConnection then
-            instaKillConnection:Disconnect()
-            instaKillConnection = nil
-        end
-    end
-end)
-end)
+ 
 
 -- Auto-restart after death (so you don’t lose the stun when you respawn)
 game.Players.LocalPlayer.CharacterAdded:Connect(function()
@@ -835,6 +816,27 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
             exploitGui = nil
         end
     end
+end)
+
+local instaKillEnabled = false
+local instaKillConnection = nil
+
+local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
+    instaKillEnabled = not instaKillEnabled
+
+    if instaKillEnabled then
+        instaKillConnection = runservice.RenderStepped:Connect(function()
+            if rake and rake:FindFirstChild("Monster") then
+                rake.Monster.Health = 0
+            end
+        end)
+    else
+        if instaKillConnection then
+            instaKillConnection:Disconnect()
+            instaKillConnection = nil
+        end
+    end
+end)
 end)
 
 
