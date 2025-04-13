@@ -708,6 +708,35 @@ local aolb = _G.Main.createButton(World,"AutoOpenLootBox",function()
 end
 end)
 
+local thirdPersonEnabled = false
+local thirdPersonConnection = nil
+
+local thirdPersonButton = _G.Main.createButton(World, "Third Person", function()
+    if not thirdPersonEnabled then
+        thirdPersonEnabled = true
+
+        thirdPersonConnection = runservice.RenderStepped:Connect(function()
+            local player = game:GetService("Players").LocalPlayer
+            if player then
+                player.CameraMaxZoomDistance = math.huge
+                player.CameraMinZoomDistance = 0
+            end
+        end)
+    else
+        thirdPersonEnabled = false
+
+        if thirdPersonConnection then
+            thirdPersonConnection:Disconnect()
+            thirdPersonConnection = nil
+        end
+
+        local player = game:GetService("Players").LocalPlayer
+        if player then
+            player.CameraMaxZoomDistance = 0
+            player.CameraMinZoomDistance = 0
+        end
+    end
+end)
 
 TextButton2.MouseButton1Click:Connect(function()
 	sapien.Enabled = not sapien.Enabled
