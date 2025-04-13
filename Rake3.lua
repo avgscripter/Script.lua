@@ -737,10 +737,10 @@ local thirdPersonButton = _G.Main.createButton(World, "Third Person", function()
         end
     end
 end)
-
 local pointsExploitEnabled = false
 local exploitGui = nil
 local exploitConnection = nil
+local debounce = false
 
 local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", function()
     pointsExploitEnabled = not pointsExploitEnabled
@@ -755,8 +755,8 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
 
         -- Main Frame
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 220, 0, 110)
-        frame.Position = UDim2.new(0.05, 0, 0.5, -55) -- Left center, good for all screens
+        frame.Size = UDim2.new(0, 200, 0, 100)
+        frame.Position = UDim2.new(0.05, 0, 0.5, -50)
         frame.AnchorPoint = Vector2.new(0, 0.5)
         frame.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
         frame.BorderSizePixel = 0
@@ -769,28 +769,31 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
 
         -- Label
         local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(200, 0, 0, 100)
-        label.Position = UDim2.new(0, 0, 0, 0)
+        label.Size = UDim2.new(1, -10, 0, 25)
+        label.Position = UDim2.new(0, 5, 0, 5)
         label.Text = "Needs to be near shop (cause lag)"
         label.Font = Enum.Font.SourceSansBold
         label.TextWrapped = true
-        label.TextSize = 16
+        label.TextScaled = true
         label.TextColor3 = Color3.new(1, 1, 1)
         label.BackgroundTransparency = 1
         label.Parent = frame
 
         -- Button
         local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, -10, 0, 50)
+        button.Size = UDim2.new(1, -10, 0, 45)
         button.Position = UDim2.new(0, 5, 0, 50)
         button.Text = "Points Exploit"
         button.Font = Enum.Font.SourceSansBold
-        button.TextSize = 20
+        button.TextSize = 18
         button.BackgroundColor3 = Color3.fromRGB(0, 85, 200)
         button.TextColor3 = Color3.new(1, 1, 1)
         button.Parent = frame
 
         exploitConnection = button.MouseButton1Click:Connect(function()
+            if debounce then return end
+            debounce = true
+
             local args = {
                 [1] = "SellScraps",
                 [2] = "Scraps"
@@ -800,6 +803,10 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
             for i = 1, times do
                 game:GetService("ReplicatedStorage"):WaitForChild("ShopEvent"):FireServer(unpack(args))
             end
+
+            task.delay(5, function()
+                debounce = false
+            end)
         end)
     else
         if exploitConnection then
@@ -813,6 +820,7 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
         end
     end
 end)
+
 
 TextButton2.MouseButton1Click:Connect(function()
 	sapien.Enabled = not sapien.Enabled
