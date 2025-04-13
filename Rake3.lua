@@ -400,7 +400,7 @@ game.Workspace.ChildAdded:Connect(function(child)
             startAuraLoop()
         end
     end
- 
+end)
 
 -- Auto-restart after death (so you don’t lose the stun when you respawn)
 game.Players.LocalPlayer.CharacterAdded:Connect(function()
