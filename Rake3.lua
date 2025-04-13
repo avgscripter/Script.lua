@@ -414,7 +414,6 @@ end)
 -- Services
 local Players = game:GetService("Players")
 
-
 -- Variables
 local LocalPlayer = Players.LocalPlayer
 local connection121
@@ -470,7 +469,7 @@ local function antiHit(character)
             end
         end
     end)
-		end
+end
 
 -- Connect to CharacterAdded event
 LocalPlayer.CharacterAdded:Connect(function(character)
@@ -486,8 +485,6 @@ end
 local flybut = _G.Main.createButton(Combat, "AntiHit", function()
     Fly = not Fly
 end)
-
-print("Script initialized") -- Debugging statement to check if script runs
 
 --Visuals
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
