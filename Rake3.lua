@@ -363,7 +363,7 @@ local function aura()
                 stunStick.Event:FireServer("S")  
                 stunStick.Event:FireServer("H", rake.Head)
             end
-	     wait(0.1)
+	     wait(0.03)
         end
     end
 end
@@ -846,8 +846,19 @@ local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
 
     if instaKillEnabled then
         instaKillConnection = runservice.RenderStepped:Connect(function()
+            local rake = workspace:FindFirstChild("Rake")  -- Always re-scan
+
             if rake and rake:FindFirstChild("Monster") then
                 rake.Monster.Health = 0
+
+                -- Stop after killing Rake
+                if rake.Monster.Health <= 0 then
+                    if instaKillConnection then
+                        instaKillConnection:Disconnect()
+                        instaKillConnection = nil
+                    end
+                    instaKillEnabled = false -- Toggle off so you can click to enable again
+                end
             end
         end)
     else
@@ -857,6 +868,8 @@ local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
         end
     end
 end)
+
+
 TextButton2.MouseButton1Click:Connect(function()
 	sapien.Enabled = not sapien.Enabled
 end)
