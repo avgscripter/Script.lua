@@ -433,7 +433,7 @@ local function createBackButton()
 	if backFrame then return end
 
 	-- Create a frame to contain the button
-	backFrame = Instance.new("Frame")
+	backFrame = Instance.new("Frame",s1)
 	backFrame.Size = UDim2.new(0, 60, 0, 30)
 	backFrame.Position = UDim2.new(0, 10, 0, 300)
 	backFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
