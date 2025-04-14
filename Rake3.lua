@@ -413,15 +413,14 @@ end)
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- Variables
 local Fly = false
-local backBtn = nil
+local backFrame = nil
 
--- Helper: Check if alive
+-- Helper: Check if player is alive
 local function IsAlive(player)
 	return player.Character
 		and player.Character:FindFirstChild("HumanoidRootPart")
@@ -429,22 +428,38 @@ local function IsAlive(player)
 		and player.Character.Humanoid.Health > 0
 end
 
--- Function to create the small "Back" button
+-- Function to create draggable back button
 local function createBackButton()
-	if backBtn then return end
+	if backFrame then return end
 
-	backBtn = Instance.new("TextButton")
-	backBtn.Size = UDim2.new(0, 50, 0, 25)
-	backBtn.Position = UDim2.new(0, 10, 0, 300)
+	-- Create a frame to contain the button
+	backFrame = Instance.new("Frame")
+	backFrame.Size = UDim2.new(0, 60, 0, 30)
+	backFrame.Position = UDim2.new(0, 10, 0, 300)
+	backFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	backFrame.Active = true
+	backFrame.Name = "BackFrame"
+	backFrame.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+	-- DragDetector
+	local drag = Instance.new("Dragger")
+	drag.Parent = backFrame
+
+	local dragDetector = Instance.new("DragDetector")
+	dragDetector.Parent = backFrame
+
+	-- Back Button
+	local backBtn = Instance.new("TextButton")
+	backBtn.Size = UDim2.new(1, 0, 1, 0)
+	backBtn.Position = UDim2.new(0, 0, 0, 0)
 	backBtn.Text = "↩ Back"
-	backBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	backBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 	backBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	backBtn.Draggable = true
-	backBtn.Active = true
-	backBtn.Visible = true
-	backBtn.Name = "AntiHitBackBtn"
-	backBtn.Parent = LocalPlayer:WaitForChild("PlayerGui")
+	backBtn.Font = Enum.Font.SourceSansBold
+	backBtn.TextSize = 14
+	backBtn.Parent = backFrame
 
+	-- On Click Teleport Back
 	backBtn.MouseButton1Click:Connect(function()
 		local character = LocalPlayer.Character
 		if not IsAlive(LocalPlayer) then return end
@@ -454,22 +469,26 @@ local function createBackButton()
 
 		if rake and rake:FindFirstChild("HumanoidRootPart") then
 			local rakeRoot = rake.HumanoidRootPart
-			local behind = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
-			rootPart.CFrame = CFrame.new(behind, rakeRoot.Position)
-			Camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
+			local distance = (rakeRoot.Position - rootPart.Position).Magnitude
+
+			if distance <= 15 then
+				local behind = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
+				rootPart.CFrame = CFrame.new(behind, rakeRoot.Position)
+				Camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
+			end
 		end
 	end)
 end
 
--- Function to remove back button
+-- Remove Button Frame
 local function removeBackButton()
-	if backBtn then
-		backBtn:Destroy()
-		backBtn = nil
+	if backFrame then
+		backFrame:Destroy()
+		backFrame = nil
 	end
 end
 
--- Toggle Button
+-- Toggle AntiHit
 local flybut = _G.Main.createButton(Combat, "AntiHit", function()
 	Fly = not Fly
 
@@ -480,7 +499,7 @@ local flybut = _G.Main.createButton(Combat, "AntiHit", function()
 	end
 end)
 
--- Reset on respawn
+-- Respawn Reset
 LocalPlayer.CharacterAdded:Connect(function()
 	if Fly then
 		createBackButton()
