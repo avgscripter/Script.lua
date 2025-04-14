@@ -446,7 +446,7 @@ local function antiHit(character)
 				antiHitPart.Name = "AntiHitBarrier"
 				antiHitPart.Size = Vector3.new(4, 10, 4)
 				antiHitPart.Anchored = true
-				antiHitPart.CanCollide = true
+				antiHitPart.CanCollide = false
 				antiHitPart.Transparency = 0
 				antiHitPart.Parent = workspace
 
@@ -459,7 +459,7 @@ local function antiHit(character)
 				end)
 			end
 
-			-- Update antiHitPart position above Rake
+			
 			antiHitPart.CFrame = rakeRoot.CFrame 
 
 		elseif antiHitPart then
