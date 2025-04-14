@@ -446,7 +446,7 @@ local function antiHit(character)
 				rakeRoot.Size = Vector3.new(5, 5, 5)
 			end
 
-			if distance <= 30 then
+			if distance <= 5 then
 				-- Teleport behind Rake
 				local behind = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
 				rootPart.CFrame = CFrame.new(behind, rakeRoot.Position)
