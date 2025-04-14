@@ -413,63 +413,79 @@ end)
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-
+local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 -- Variables
 local Fly = false
-local connection121
+local backBtn = nil
 
--- Helper: check if alive
+-- Helper: Check if alive
 local function IsAlive(player)
-	return player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
+	return player.Character
+		and player.Character:FindFirstChild("HumanoidRootPart")
+		and player.Character:FindFirstChild("Humanoid")
+		and player.Character.Humanoid.Health > 0
 end
 
--- Main Anti-Hit Logic
-local function antiHit(character)
-	if connection121 then
-		connection121:Disconnect()
-	end
+-- Function to create the small "Back" button
+local function createBackButton()
+	if backBtn then return end
 
-	local rootPart = character:WaitForChild("HumanoidRootPart")
+	backBtn = Instance.new("TextButton")
+	backBtn.Size = UDim2.new(0, 50, 0, 25)
+	backBtn.Position = UDim2.new(0, 10, 0, 300)
+	backBtn.Text = "↩ Back"
+	backBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	backBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	backBtn.Draggable = true
+	backBtn.Active = true
+	backBtn.Visible = true
+	backBtn.Name = "AntiHitBackBtn"
+	backBtn.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-	connection121 = RunService.RenderStepped:Connect(function()
-		local Rake = workspace:FindFirstChild("Rake")
+	backBtn.MouseButton1Click:Connect(function()
+		local character = LocalPlayer.Character
+		if not IsAlive(LocalPlayer) then return end
 
-		if Fly and Rake and Rake:FindFirstChild("HumanoidRootPart") and IsAlive(LocalPlayer) then
-			local rakeRoot = Rake.HumanoidRootPart
-			local distance = (rakeRoot.Position - rootPart.Position).Magnitude
+		local rootPart = character:FindFirstChild("HumanoidRootPart")
+		local rake = workspace:FindFirstChild("Rake")
 
-			-- Resize Rake's root part to act like a hit barrier
-			if rakeRoot.Size ~= Vector3.new(5, 5, 5) then
-				rakeRoot.Size = Vector3.new(5, 5, 5)
-			end
-
-			if distance <= 5 then
-				-- Teleport behind Rake
-				local behind = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
-				rootPart.CFrame = CFrame.new(behind, rakeRoot.Position)
-			end
+		if rake and rake:FindFirstChild("HumanoidRootPart") then
+			local rakeRoot = rake.HumanoidRootPart
+			local behind = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
+			rootPart.CFrame = CFrame.new(behind, rakeRoot.Position)
+			Camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
 		end
 	end)
 end
 
--- Character added
-LocalPlayer.CharacterAdded:Connect(function(character)
-	antiHit(character)
-end)
-
--- If already spawned
-if LocalPlayer.Character then
-	antiHit(LocalPlayer.Character)
+-- Function to remove back button
+local function removeBackButton()
+	if backBtn then
+		backBtn:Destroy()
+		backBtn = nil
+	end
 end
 
 -- Toggle Button
 local flybut = _G.Main.createButton(Combat, "AntiHit", function()
 	Fly = not Fly
+
+	if Fly then
+		createBackButton()
+	else
+		removeBackButton()
+	end
 end)
 
+-- Reset on respawn
+LocalPlayer.CharacterAdded:Connect(function()
+	if Fly then
+		createBackButton()
+	end
+end)
 
 --Visuals
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
