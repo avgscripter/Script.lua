@@ -447,7 +447,7 @@ local function antiHit(character)
 				antiHitPart.Size = Vector3.new(4, 4, 4)
 				antiHitPart.Anchored = true
 				antiHitPart.CanCollide = true
-				antiHitPart.Transparency = 1
+				antiHitPart.Transparency = 0
 				antiHitPart.Parent = workspace
 
 				touchConnection = antiHitPart.Touched:Connect(function(hit)
