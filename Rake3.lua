@@ -413,6 +413,8 @@ end)
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -473,10 +475,16 @@ local function antiHit(character)
 			local distance = (rakeRoot.Position - rootPart.Position).Magnitude
 
 			if distance <= 30 then
-				local behindPosition = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
-				rootPart.CFrame = CFrame.new(behindPosition, rakeRoot.Position)
+				local behindPos = rakeRoot.Position - (rakeRoot.CFrame.LookVector.Unit * 6)
+				local heightAdjusted = Vector3.new(behindPos.X, rakeRoot.Position.Y, behindPos.Z)
+
+				-- Smooth repositioning
+				rootPart.CFrame = CFrame.new(heightAdjusted, rakeRoot.Position)
+
+				-- Optional camera lock-on
 				Camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
 
+				-- Visual anti-hit part (optional)
 				if not antiHitPart then
 					antiHitPart = Instance.new("Part")
 					antiHitPart.Name = "AntiHitBarrier"
@@ -486,6 +494,7 @@ local function antiHit(character)
 					antiHitPart.Transparency = 1
 					antiHitPart.Parent = workspace
 				end
+
 				antiHitPart.CFrame = rootPart.CFrame
 			end
 		elseif antiHitPart then
@@ -500,15 +509,14 @@ LocalPlayer.CharacterAdded:Connect(function(character)
 	antiHit(character)
 end)
 
--- Initialize if character already exists
+-- If character already loaded
 if LocalPlayer.Character then
 	antiHit(LocalPlayer.Character)
 end
 
--- Create the Toggle Button
+-- Toggle Button
 local flybut = _G.Main.createButton(Combat, "AntiHit", function()
 	Fly = not Fly
-
 	if Fly then
 		createStopGUI()
 	end
