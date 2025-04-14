@@ -359,7 +359,7 @@ local function aura()
 
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
             local stunStick = char.StunStick
-            for i = 1, 4 do  
+            for i = 1, 3 do  
                 stunStick.Event:FireServer("S") 
 			wait(0.03)
                 stunStick.Event:FireServer("H", rake.Head)
