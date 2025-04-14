@@ -360,10 +360,10 @@ local function aura()
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
             local stunStick = char.StunStick
             for i = 1, 4 do  
-                stunStick.Event:FireServer("S")  
+                stunStick.Event:FireServer("S") 
+			wait(0.03)
                 stunStick.Event:FireServer("H", rake.Head)
             end
-	     wait(0.03)
         end
     end
 end
@@ -413,54 +413,20 @@ end)
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
 -- Variables
 local Fly = false
 local connection121
-local antiHitPart
 
--- Helper function to check if player is alive
+-- Helper: check if alive
 local function IsAlive(player)
 	return player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 		and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
 end
 
--- Create Stop GUI
-local function createStopGUI()
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "AntiHitStopGui"
-	screenGui.ResetOnSpawn = false
-	screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-	local stopButton = Instance.new("TextButton")
-	stopButton.Size = UDim2.new(0, 60, 0, 25)
-	stopButton.Position = UDim2.new(0, 20, 0, 100)
-	stopButton.BackgroundColor3 = Color3.new(1, 0.3, 0.3)
-	stopButton.Text = "Stop"
-	stopButton.TextSize = 12
-	stopButton.Draggable = true
-	stopButton.Active = true
-	stopButton.Parent = screenGui
-
-	stopButton.MouseButton1Click:Connect(function()
-		Fly = false
-		if connection121 then
-			connection121:Disconnect()
-			connection121 = nil
-		end
-		if antiHitPart then
-			antiHitPart:Destroy()
-			antiHitPart = nil
-		end
-		screenGui:Destroy()
-	end)
-end
-
--- Anti-hit function
+-- Main Anti-Hit Logic
 local function antiHit(character)
 	if connection121 then
 		connection121:Disconnect()
@@ -470,46 +436,31 @@ local function antiHit(character)
 
 	connection121 = RunService.RenderStepped:Connect(function()
 		local Rake = workspace:FindFirstChild("Rake")
+
 		if Fly and Rake and Rake:FindFirstChild("HumanoidRootPart") and IsAlive(LocalPlayer) then
 			local rakeRoot = Rake.HumanoidRootPart
 			local distance = (rakeRoot.Position - rootPart.Position).Magnitude
 
-			if distance <= 30 then
-				local behindPos = rakeRoot.Position - (rakeRoot.CFrame.LookVector.Unit * 6)
-				local heightAdjusted = Vector3.new(behindPos.X, rakeRoot.Position.Y, behindPos.Z)
-
-				-- Smooth repositioning
-				rootPart.CFrame = CFrame.new(heightAdjusted, rakeRoot.Position)
-
-				-- Optional camera lock-on
-				Camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
-
-				-- Visual anti-hit part (optional)
-				if not antiHitPart then
-					antiHitPart = Instance.new("Part")
-					antiHitPart.Name = "AntiHitBarrier"
-					antiHitPart.Size = Vector3.new(4, 10, 4)
-					antiHitPart.Anchored = true
-					antiHitPart.CanCollide = false
-					antiHitPart.Transparency = 1
-					antiHitPart.Parent = workspace
-				end
-
-				antiHitPart.CFrame = rootPart.CFrame
+			-- Resize Rake's root part to act like a hit barrier
+			if rakeRoot.Size ~= Vector3.new(5, 5, 5) then
+				rakeRoot.Size = Vector3.new(5, 5, 5)
 			end
-		elseif antiHitPart then
-			antiHitPart:Destroy()
-			antiHitPart = nil
+
+			if distance <= 30 then
+				-- Teleport behind Rake
+				local behind = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
+				rootPart.CFrame = CFrame.new(behind, rakeRoot.Position)
+			end
 		end
 	end)
 end
 
--- Initialize on character spawn
+-- Character added
 LocalPlayer.CharacterAdded:Connect(function(character)
 	antiHit(character)
 end)
 
--- If character already loaded
+-- If already spawned
 if LocalPlayer.Character then
 	antiHit(LocalPlayer.Character)
 end
@@ -517,9 +468,6 @@ end
 -- Toggle Button
 local flybut = _G.Main.createButton(Combat, "AntiHit", function()
 	Fly = not Fly
-	if Fly then
-		createStopGUI()
-	end
 end)
 
 
@@ -872,35 +820,63 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
     end
 end)
 
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
 local instaKillEnabled = false
 local instaKillConnection = nil
+local rakeMonitorConnection = nil
 
+local function stopInstaKill()
+	if instaKillConnection then
+		instaKillConnection:Disconnect()
+		instaKillConnection = nil
+	end
+end
+
+local function startInstaKillLoop()
+	stopInstaKill() -- just in case
+	instaKillConnection = RunService.Heartbeat:Connect(function()
+		local rake = workspace:FindFirstChild("Rake")
+		if rake and rake:FindFirstChild("Monster") then
+			if rake.Monster.Health > 0 then
+				rake.Monster.Health = 0
+			end
+		end
+	end)
+end
+
+-- Rake monitor: keep checking if Rake returns
+local function monitorRake()
+	if rakeMonitorConnection then return end -- already monitoring
+
+	rakeMonitorConnection = RunService.Heartbeat:Connect(function()
+		if instaKillEnabled then
+			local rake = workspace:FindFirstChild("Rake")
+			if rake and rake:FindFirstChild("Monster") and rake.Monster.Health > 0 then
+				startInstaKillLoop()
+			end
+		else
+			stopInstaKill()
+		end
+	end)
+end
+
+-- Toggle button
 local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
-    instaKillEnabled = not instaKillEnabled
+	instaKillEnabled = not instaKillEnabled
 
-    if instaKillEnabled then
-        instaKillConnection = runservice.RenderStepped:Connect(function()
-            local rake = workspace:FindFirstChild("Rake")  -- Always re-scan
+	if instaKillEnabled then
+		monitorRake()
+	else
+		stopInstaKill()
+	end
+end)
 
-            if rake and rake:FindFirstChild("Monster") then
-                rake.Monster.Health = 0
-
-                -- Stop after killing Rake
-                if rake.Monster.Health <= 0 then
-                    if instaKillConnection then
-                        instaKillConnection:Disconnect()
-                        instaKillConnection = nil
-                    end
-                    instaKillEnabled = false -- Toggle off so you can click to enable again
-                end
-            end
-        end)
-    else
-        if instaKillConnection then
-            instaKillConnection:Disconnect()
-            instaKillConnection = nil
-        end
-    end
+-- Reset everything on player respawn
+LocalPlayer.CharacterAdded:Connect(function()
+	stopInstaKill()
 end)
 
 
