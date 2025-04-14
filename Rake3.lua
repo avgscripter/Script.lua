@@ -444,7 +444,7 @@ local function antiHit(character)
 			if not antiHitPart then
 				antiHitPart = Instance.new("Part")
 				antiHitPart.Name = "AntiHitBarrier"
-				antiHitPart.Size = Vector3.new(4, 4, 4)
+				antiHitPart.Size = Vector3.new(4, 10, 4)
 				antiHitPart.Anchored = true
 				antiHitPart.CanCollide = true
 				antiHitPart.Transparency = 0
@@ -460,7 +460,7 @@ local function antiHit(character)
 			end
 
 			-- Update antiHitPart position above Rake
-			antiHitPart.CFrame = rakeRoot.CFrame + Vector3.new(0, 3, 0)
+			antiHitPart.CFrame = rakeRoot.CFrame 
 
 		elseif antiHitPart then
 			-- Cleanup when Fly is disabled or Rake is gone
