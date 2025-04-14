@@ -420,11 +420,42 @@ local Camera = workspace.CurrentCamera
 local Fly = false
 local connection121
 local antiHitPart
-local touchConnection
 
--- Helper function to check if a player is alive
+-- Helper function to check if player is alive
 local function IsAlive(player)
-	return player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
+	return player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
+end
+
+-- Create Stop GUI
+local function createStopGUI()
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "AntiHitStopGui"
+	screenGui.ResetOnSpawn = false
+	screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+	local stopButton = Instance.new("TextButton")
+	stopButton.Size = UDim2.new(0, 60, 0, 25)
+	stopButton.Position = UDim2.new(0, 20, 0, 100)
+	stopButton.BackgroundColor3 = Color3.new(1, 0.3, 0.3)
+	stopButton.Text = "Stop"
+	stopButton.TextSize = 12
+	stopButton.Draggable = true
+	stopButton.Active = true
+	stopButton.Parent = screenGui
+
+	stopButton.MouseButton1Click:Connect(function()
+		Fly = false
+		if connection121 then
+			connection121:Disconnect()
+			connection121 = nil
+		end
+		if antiHitPart then
+			antiHitPart:Destroy()
+			antiHitPart = nil
+		end
+		screenGui:Destroy()
+	end)
 end
 
 -- Anti-hit function
@@ -437,37 +468,27 @@ local function antiHit(character)
 
 	connection121 = RunService.RenderStepped:Connect(function()
 		local Rake = workspace:FindFirstChild("Rake")
-		if Fly and Rake and Rake:FindFirstChild("HumanoidRootPart") then
+		if Fly and Rake and Rake:FindFirstChild("HumanoidRootPart") and IsAlive(LocalPlayer) then
 			local rakeRoot = Rake.HumanoidRootPart
+			local distance = (rakeRoot.Position - rootPart.Position).Magnitude
 
-			-- Setup antiHitPart once
-			if not antiHitPart then
-				antiHitPart = Instance.new("Part")
-				antiHitPart.Name = "AntiHitBarrier"
-				antiHitPart.Size = Vector3.new(4, 10, 4)
-				antiHitPart.Anchored = true
-				antiHitPart.CanCollide = false
-				antiHitPart.Transparency = 0
-				antiHitPart.Parent = workspace
+			if distance <= 30 then
+				local behindPosition = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
+				rootPart.CFrame = CFrame.new(behindPosition, rakeRoot.Position)
+				Camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
 
-				touchConnection = antiHitPart.Touched:Connect(function(hit)
-					if hit:IsDescendantOf(character) and IsAlive(LocalPlayer) then
-						local behindPosition = rakeRoot.Position - (rakeRoot.CFrame.LookVector * 6)
-						rootPart.CFrame = CFrame.new(behindPosition)
-						Camera.CFrame = CFrame.new(rootPart.Position, rakeRoot.Position)
-					end
-				end)
+				if not antiHitPart then
+					antiHitPart = Instance.new("Part")
+					antiHitPart.Name = "AntiHitBarrier"
+					antiHitPart.Size = Vector3.new(4, 10, 4)
+					antiHitPart.Anchored = true
+					antiHitPart.CanCollide = false
+					antiHitPart.Transparency = 1
+					antiHitPart.Parent = workspace
+				end
+				antiHitPart.CFrame = rootPart.CFrame
 			end
-
-			
-			antiHitPart.CFrame = rakeRoot.CFrame 
-
 		elseif antiHitPart then
-			-- Cleanup when Fly is disabled or Rake is gone
-			if touchConnection then
-				touchConnection:Disconnect()
-				touchConnection = nil
-			end
 			antiHitPart:Destroy()
 			antiHitPart = nil
 		end
@@ -479,7 +500,7 @@ LocalPlayer.CharacterAdded:Connect(function(character)
 	antiHit(character)
 end)
 
--- Initialize if character is already loaded
+-- Initialize if character already exists
 if LocalPlayer.Character then
 	antiHit(LocalPlayer.Character)
 end
@@ -487,7 +508,12 @@ end
 -- Create the Toggle Button
 local flybut = _G.Main.createButton(Combat, "AntiHit", function()
 	Fly = not Fly
+
+	if Fly then
+		createStopGUI()
+	end
 end)
+
 
 --Visuals
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
