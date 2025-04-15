@@ -394,7 +394,7 @@ local function aura()
             local stunStick = char.StunStick
             for i = 1, 3 do  
                 stunStick.Event:FireServer("S") 
-			task.wait(0.278)
+			task.wait(0.1)
                 stunStick.Event:FireServer("H", rake.Head)
             end
         end
@@ -428,7 +428,7 @@ end)
 game.Workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
         print("New Rake detected! Restarting aura loop...")
-        task.wait(1)  -- Small delay to ensure Rake is fully loaded
+        task.wait()  -- Small delay to ensure Rake is fully loaded
         if stunstick then
             startAuraLoop()
         end
