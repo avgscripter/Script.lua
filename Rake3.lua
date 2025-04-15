@@ -323,9 +323,9 @@ end)()
 
 --watermark
 local frameforwatermark = _G.Main.createmarkframe(w1)
-local NoSlowDown = _G.Main.createwatermark(frameforwatermark,"NoSlowDown")
+local NoSlowDown = _G.Main.createwatermark(frameforwatermark,"Infinite Stamina")
 local NoFallDamage = _G.Main.createwatermark(frameforwatermark,"NoFallDamage")
-local Remove = _G.Main.createwatermark(frameforwatermark,"RemoveBorderwalls")
+local Remove = _G.Main.createwatermark(frameforwatermark,"NoBorderwalls")
 nsd()
 
 local replicatedStorage = game:GetService("ReplicatedStorage")
@@ -689,7 +689,7 @@ local thirdPersonButton = _G.Main.createButton(World, "Third Person", function()
             local player = game:GetService("Players").LocalPlayer
             if player then
                 player.CameraMaxZoomDistance = math.huge
-                player.CameraMinZoomDistance = 0
+                player.CameraMinZoomDistance = 0.5
             end
         end)
     else
