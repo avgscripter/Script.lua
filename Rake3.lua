@@ -326,14 +326,47 @@ local frameforwatermark = _G.Main.createmarkframe(w1)
 local NoSlowDown = _G.Main.createwatermark(frameforwatermark,"NoSlowDown")
 local NoFallDamage = _G.Main.createwatermark(frameforwatermark,"NoFallDamage")
 local Remove = _G.Main.createwatermark(frameforwatermark,"RemoveBorderwalls")
---Combat
-task.spawn(function()
-runservice.RenderStepped:Connect(function()
-boost()
-end)
-end)
 nsd()
 
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local getconnections = getconnections or get_signal_cons -- fallback for compatibility
+local getloadedmodules = getloadedmodules
+local require = require
+local M_Hs = {}
+
+local function isModuleInTable(module)
+    for _, existingModule in ipairs(M_Hs) do
+        if existingModule == module then
+            return true
+        end
+    end
+    return false
+end
+
+if replicatedStorage:FindFirstChild("TKSMNA") and replicatedStorage.TKSMNA:FindFirstChild("Event") then
+    local event = replicatedStorage.TKSMNA.Event
+    for _, connection in ipairs(getconnections(event)) do
+        if connection.Connected then
+            connection:Disconnect()
+        end
+    end
+end
+
+for _, module in ipairs(getloadedmodules()) do
+    if module.Name == "M_H" and not isModuleInTable(module) then
+        table.insert(M_Hs, module)
+        local moduleScript = require(module)
+        if moduleScript and moduleScript.TakeStamina then
+            local oldTakeStamina = moduleScript.TakeStamina
+            moduleScript.TakeStamina = function(self, amount)
+                if amount > 0 then
+                    return oldTakeStamina(self, -0.5)
+                end
+                return oldTakeStamina(self, amount)
+            end
+        end
+    end
+end
 
 runservice.RenderStepped:Connect(function()
 	fullbr()
@@ -361,7 +394,7 @@ local function aura()
             local stunStick = char.StunStick
             for i = 1, 3 do  
                 stunStick.Event:FireServer("S") 
-			wait(0.03)
+			task.wait(0.278)
                 stunStick.Event:FireServer("H", rake.Head)
             end
         end
@@ -370,7 +403,7 @@ end
 
 -- Start a continuous loop for the aura using Heartbeat
 local function startAuraLoop()
-    if con then con:Disconnect() end -- Ensure previous connection is stopped
+    if con then con:Disconnect() end 
 
     con = runservice.Heartbeat:Connect(function()
         aura()
@@ -816,6 +849,29 @@ end)
 LocalPlayer.CharacterAdded:Connect(function()
 	stopInstaKill()
 end)
+
+local noSlowDownEnabled = false
+local noSlowDownConnection = nil
+
+local nsdButton = _G.Main.createButton(World, "NoSlowDown", function()
+    noSlowDownEnabled = not noSlowDownEnabled
+
+    if noSlowDownEnabled then
+        noSlowDownConnection = runservice.RenderStepped:Connect(function()
+            local char = game.Players.LocalPlayer.Character
+            if char and char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = 30
+            end
+        end)
+    else
+        if noSlowDownConnection then
+            noSlowDownConnection:Disconnect()
+            noSlowDownConnection = nil
+        end
+    end
+end)
+
+
 
 
 TextButton2.MouseButton1Click:Connect(function()
