@@ -327,46 +327,67 @@ local NoSlowDown = _G.Main.createwatermark(frameforwatermark,"Infinite Stamina")
 local NoFallDamage = _G.Main.createwatermark(frameforwatermark,"NoFallDamage")
 local Remove = _G.Main.createwatermark(frameforwatermark,"NoBorderwalls")
 nsd()
-
 local replicatedStorage = game:GetService("ReplicatedStorage")
-local getconnections = getconnections or get_signal_cons -- fallback for compatibility
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+
+local getconnections = getconnections or get_signal_cons
 local getloadedmodules = getloadedmodules
 local require = require
-local M_Hs = {}
 
-local function isModuleInTable(module)
-    for _, existingModule in ipairs(M_Hs) do
-        if existingModule == module then
-            return true
-        end
-    end
-    return false
+-- Store references to already hooked modules
+local hookedModules = {}
+
+-- Helper: Check if module is already hooked
+local function isModuleHooked(module)
+	for _, m in ipairs(hookedModules) do
+		if m == module then
+			return true
+		end
+	end
+	return false
 end
 
-if replicatedStorage:FindFirstChild("TKSMNA") and replicatedStorage.TKSMNA:FindFirstChild("Event") then
-    local event = replicatedStorage.TKSMNA.Event
-    for _, connection in ipairs(getconnections(event)) do
-        if connection.Connected then
-            connection:Disconnect()
-        end
-    end
+-- Function to hook stamina-related module
+local function hookStaminaModule()
+	for _, module in ipairs(getloadedmodules()) do
+		if module.Name == "M_H" and not isModuleHooked(module) then
+			local success, moduleScript = pcall(require, module)
+			if success and moduleScript and moduleScript.TakeStamina then
+				table.insert(hookedModules, module)
+				local oldTakeStamina = moduleScript.TakeStamina
+				moduleScript.TakeStamina = function(self, amount)
+					if amount > 0 then
+						return oldTakeStamina(self, -0.5)
+					end
+					return oldTakeStamina(self, amount)
+				end
+				warn("Hooked TakeStamina in", module:GetFullName())
+			end
+		end
+	end
 end
 
-for _, module in ipairs(getloadedmodules()) do
-    if module.Name == "M_H" and not isModuleInTable(module) then
-        table.insert(M_Hs, module)
-        local moduleScript = require(module)
-        if moduleScript and moduleScript.TakeStamina then
-            local oldTakeStamina = moduleScript.TakeStamina
-            moduleScript.TakeStamina = function(self, amount)
-                if amount > 0 then
-                    return oldTakeStamina(self, -0.5)
-                end
-                return oldTakeStamina(self, amount)
-            end
-        end
-    end
+-- Disconnect the TKSMNA event handler
+local function disableAntiCheat()
+	if replicatedStorage:FindFirstChild("TKSMNA") and replicatedStorage.TKSMNA:FindFirstChild("Event") then
+		for _, connection in ipairs(getconnections(replicatedStorage.TKSMNA.Event)) do
+			if connection.Connected then
+				connection:Disconnect()
+			end
+		end
+	end
 end
+
+-- Initial execution
+disableAntiCheat()
+hookStaminaModule()
+
+-- Re-hook after death (character respawn)
+localPlayer.CharacterAdded:Connect(function()
+	task.wait(1)
+	hookStaminaModule()
+end)
 
 runservice.RenderStepped:Connect(function()
 	fullbr()
