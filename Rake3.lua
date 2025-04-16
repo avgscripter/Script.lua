@@ -376,67 +376,78 @@ end)
 
 local Combat = _G.Main.createFrame(sapien,UDim2.new(0.353, -49,0.345, 5),nil,"Combat","CombatFrame")
 
-local con
+local runService = game:GetService("RunService")
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local auraConnection
+local stunstick = false
+local lastHit = 0
 
 -- Function to dynamically get the latest Rake instance
 local function getRake()
     return workspace:FindFirstChild("Rake")
 end
 
+-- Aura function with cooldown and error prevention
 local function aura()
-   while true do
-    if stunstick then  
-        local rake = getRake()
-        local player = game.Players.LocalPlayer
-        local char = player.Character
+    local char = player.Character
+    local rake = getRake()
 
-        if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
-            local stunStick = char.StunStick  
-	    stunStick.Event:FireServer("S") 
-		wait(0.3) 
-	   stunStick.Event:FireServer("H", rake.Head)
-          end
-       end
+    if char and rake and rake:FindFirstChild("Head") and char:FindFirstChild("StunStick") then
+        local stunStick = char.StunStick
+        local now = tick()
+
+        -- Only attack every 0.5s
+        if now - lastHit >= 0.5 then
+            lastHit = now
+            pcall(function()
+                stunStick.Event:FireServer("S")
+                task.wait(0.1)
+                stunStick.Event:FireServer("H", rake.Head)
+            end)
+        end
     end
 end
 
+-- Starts the aura loop using Heartbeat
 local function startAuraLoop()
-    if con then con:Disconnect() end 
+    if auraConnection then auraConnection:Disconnect() end
 
-    con = runservice.Heartbeat:Connect(function()
-        aura()
+    auraConnection = runService.Heartbeat:Connect(function()
+        if stunstick then
+            aura()
+        end
     end)
 end
-startAuraLoop()
 
+-- Button toggle logic
 local stunbut = _G.Main.createButton(Combat, "StunStickAura", function()
     stunstick = not stunstick
 
     if stunstick then
-        startAuraLoop()  -- Restart the aura loop when enabled
-    else
-        if con then con:Disconnect() end  
+        startAuraLoop()
+    elseif auraConnection then
+        auraConnection:Disconnect()
     end
 end)
 
-game.Workspace.ChildAdded:Connect(function(child)
+-- Restart aura loop when Rake respawns
+workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
-        print("New Rake detected! Restarting aura loop...")
-        task.wait()
+        task.wait(0.2)
         if stunstick then
             startAuraLoop()
         end
     end
- end)
+end)
 
--- Auto-restart after death (so you don’t lose the stun when you respawn)
-game.Players.LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(1) 
+-- Restart aura loop when player respawns
+player.CharacterAdded:Connect(function()
+    task.wait(1)
     if stunstick then
         startAuraLoop()
     end
-end)
---Visuals
+end)--Visuals
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
 
 
