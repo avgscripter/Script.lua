@@ -398,11 +398,11 @@ local function aura()
         local now = tick()
 
         -- Only attack every 0.5s
-        if now - lastHit >= 0.5 then
+        if now - lastHit >= 0.2 then
             lastHit = now
             pcall(function()
                 stunStick.Event:FireServer("S")
-                task.wait(0.1)
+                task.wait(0.01)
                 stunStick.Event:FireServer("H", rake.Head)
             end)
         end
