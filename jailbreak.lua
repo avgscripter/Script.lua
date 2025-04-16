@@ -166,7 +166,7 @@ local jb = {
     BulletEmitter = require(cloneref(ReplicatedStorage.Game.ItemSystem.BulletEmitter))
 }
 debug.setconstant(debug.getupvalue(jb.FallingController.Init, 19), 9, "Archivable")
-debug.getupvalue(jb.VehicleController.NitroShopVisible, 1).Nitro = 99999999999999999
+task.spawn(function() while wait() do debug.getupvalue(jb.VehicleController.NitroShopVisible, 1).Nitro = 200 end
 
 task.spawn(function()if not isfolder("JailBreak") then makefolder("JailBreak") end
 if not isfolder("JailBreak/RemoteAddresses") then makefolder("JailBreak/RemoteAddresses") end
@@ -415,7 +415,6 @@ end
 
 local function toggleSilentAim()
     SilentAimEnabled = not SilentAimEnabled
-    print("Silent Aim Enabled:", SilentAimEnabled)
 end
 
 local function toggleAimbot()
@@ -771,27 +770,25 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- 🟢 GUI Setup (Visuals Tab)
 local Visuals = _G.Main.createFrame(sapien, UDim2.new(0.23, 0, 0.8, 0), nil, "Visuals")
 
--- 🟢 ESP Storage
 local ESP_Boxes = {} 
 local ESP_Names = {} 
 local ESP_Tracers = {} 
 
--- 🟢 Toggle Variables
+
 local ESP_Enabled = false
 local Names_Enabled = false
 local Tracers_Enabled = false
 
--- 🟢 Function to Remove ESP for a Player
+
 local function removeESP(player)
     if ESP_Boxes[player] then ESP_Boxes[player]:Remove() ESP_Boxes[player] = nil end
     if ESP_Names[player] then ESP_Names[player]:Remove() ESP_Names[player] = nil end
     if ESP_Tracers[player] then ESP_Tracers[player]:Remove() ESP_Tracers[player] = nil end
 end
 
--- 🟢 Function to Create ESP for a Player
+
 local function createESP(player)
     if player == LocalPlayer then return end  
     removeESP(player) -- ✅ Ensure no duplicate ESP
@@ -811,13 +808,12 @@ local function createESP(player)
     ESP_Tracers[player].Thickness = 2
     ESP_Tracers[player].Visible = false
 
-    -- ✅ Remove ESP when player dies
+   
     player.CharacterRemoving:Connect(function()
         removeESP(player)
     end)
 end
 
--- 🟢 Ensure ESP Updates for All Players
 for _, player in ipairs(Players:GetPlayers()) do
     createESP(player)
 end
@@ -831,7 +827,7 @@ end)
 
 Players.PlayerRemoving:Connect(removeESP)
 
--- 🟢 Function to Update ESP Every Frame
+
 local function updateESP()
     for _, player in ipairs(Players:GetPlayers()) do
         -- Ensure ESP exists
@@ -862,19 +858,17 @@ local function updateESP()
 
                 local color = (player.Team == LocalPlayer.Team) and Color3.new(0, 0, 1) or Color3.new(1, 0, 0)
 
-                -- ✅ Show ESP only when enabled
+               
                 box.Visible = ESP_Enabled
                 box.Size = Vector2.new(width, height)
                 box.Position = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
                 box.Color = color
 
-                -- ✅ Show Names only when enabled
                 nameTag.Visible = Names_Enabled
                 nameTag.Position = Vector2.new(screenPos.X, screenPos.Y - height / 2 - 15)
                 nameTag.Text = player.Name
                 nameTag.Color = color
 
-                -- ✅ Show Tracers only when enabled
                 tracer.Visible = Tracers_Enabled
                 tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                 tracer.To = Vector2.new(screenPos.X, screenPos.Y)
@@ -885,7 +879,7 @@ local function updateESP()
                 tracer.Visible = false
             end
         else
-            removeESP(player) -- ✅ Remove ESP if player dies
+            removeESP(player)
         end
     end
 end
