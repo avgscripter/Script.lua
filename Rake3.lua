@@ -391,8 +391,10 @@ local function aura()
         local char = player.Character
 
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
-            local stunStick = char.StunStick            stunStick.Event:FireServer("S") 
-			task.wait(0.3) stunStick.Event:FireServer("H", rake.Head)
+            local stunStick = char.StunStick  
+	    stunStick.Event:FireServer("S") 
+		wait(0.3) 
+	   stunStick.Event:FireServer("H", rake.Head)
           end
        end
     end
@@ -436,7 +438,8 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
 end)
 --Visuals
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
-
+
+
 local rake2
 
 local function cleanUpHighlights()
@@ -495,7 +498,8 @@ workspace.ChildAdded:Connect(function(child)
         end
     end
 end)
-
+
+
 workspace.ChildRemoved:Connect(function(child)
     if child.Name == "Rake" then
         cleanUpHighlights()
@@ -619,7 +623,8 @@ local Pe = _G.Main.createButton(Visuals, "PlayersEsp", function()
             end     
         end)
     else
-        PlayersE = false
+        PlayersE = false
+
         if connection then
             connection:Disconnect()
             connection = nil
@@ -712,10 +717,12 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
         frame.BorderSizePixel = 0
         frame.Active = true
         frame.Parent = exploitGui
-
+
+
         local dragDetector = Instance.new("UIDragDetector")
         dragDetector.Parent = frame
-
+
+
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1, -10, 0, 25)
         label.Position = UDim2.new(0, 5, 0, 5)
@@ -726,7 +733,8 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
         label.TextColor3 = Color3.new(1, 1, 1)
         label.BackgroundTransparency = 1
         label.Parent = frame
-
+
+
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(1, -10, 0, 45)
         button.Position = UDim2.new(0, 5, 0, 50)
@@ -794,7 +802,8 @@ local function startInstaKillLoop()
 		end
 	end)
 end
-
+
+
 local function monitorRake()
 	if rakeMonitorConnection then return end 
 
@@ -809,7 +818,8 @@ local function monitorRake()
 		end
 	end)
 end
-
+
+
 local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
 	instaKillEnabled = not instaKillEnabled
 
@@ -819,7 +829,8 @@ local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
 		stopInstaKill()
 	end
 end)
-
+
+
 LocalPlayer.CharacterAdded:Connect(function()
 	stopInstaKill()
 end)
