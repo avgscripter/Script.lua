@@ -383,25 +383,21 @@ local function getRake()
     return workspace:FindFirstChild("Rake")
 end
 
--- Improved aura function (with Heartbeat)
 local function aura()
+   while true do
     if stunstick then  
         local rake = getRake()
         local player = game.Players.LocalPlayer
         local char = player.Character
 
         if char and char:FindFirstChild("StunStick") and rake and rake:FindFirstChild("Head") then  
-            local stunStick = char.StunStick
-            for i = 1, 3 do  
-                stunStick.Event:FireServer("S") 
-			task.wait(0.1)
-                stunStick.Event:FireServer("H", rake.Head)
-            end
-        end
+            local stunStick = char.StunStick            stunStick.Event:FireServer("S") 
+			task.wait(0.3) stunStick.Event:FireServer("H", rake.Head)
+          end
+       end
     end
 end
 
--- Start a continuous loop for the aura using Heartbeat
 local function startAuraLoop()
     if con then con:Disconnect() end 
 
@@ -409,26 +405,22 @@ local function startAuraLoop()
         aura()
     end)
 end
-
--- Ensure the aura loop is running
 startAuraLoop()
 
--- Button to toggle the StunStick Aura on/off
 local stunbut = _G.Main.createButton(Combat, "StunStickAura", function()
-    stunstick = not stunstick -- Toggle the state
+    stunstick = not stunstick
 
     if stunstick then
         startAuraLoop()  -- Restart the aura loop when enabled
     else
-        if con then con:Disconnect() end  -- Stop the loop when disabled
+        if con then con:Disconnect() end  
     end
 end)
 
--- Auto-restart when a new Rake spawns (round reset detection)
 game.Workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
         print("New Rake detected! Restarting aura loop...")
-        task.wait()  -- Small delay to ensure Rake is fully loaded
+        task.wait()
         if stunstick then
             startAuraLoop()
         end
@@ -437,36 +429,31 @@ game.Workspace.ChildAdded:Connect(function(child)
 
 -- Auto-restart after death (so you don’t lose the stun when you respawn)
 game.Players.LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(1)  -- Small delay to allow the character to load
+    task.wait(1) 
     if stunstick then
-        startAuraLoop()  -- Restart aura automatically after respawn
+        startAuraLoop()
     end
 end)
 --Visuals
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
-
--- Function to clean up highlights
--- Initialize necessary services and variables
+
 local rake2
 
--- Function to clean up highlights
 local function cleanUpHighlights()
     if rake2 and rake2:FindFirstChild("Highlight") then
         rake2.Highlight:Destroy()
     end
     if rake2 and rake2.Head:FindFirstChild("BillboardGui") then
-        rake2.Head.BillboardGui:Destroy() -- Fixed typo: rake.Head to rake2.Head
+        rake2.Head.BillboardGui:Destroy() 
     end
 end
 
--- Function to highlight rake
 local function highlightRake()
     if rake2 then
         toggleHighlight(rake2, "Rake", rake2.Head, Color3.new(1, 0, 0), true)
     end
 end
 
--- Initial clean-up at the start of the script
 cleanUpHighlights()
 
 local connection = nil
@@ -480,7 +467,6 @@ local re = _G.Main.createButton(Visuals, "RakeEsp", function()
         end)
     else
         RakeE = false
-        print("Rake ESP Disabled")
         if connection then
             connection:Disconnect()
             connection = nil
@@ -490,7 +476,6 @@ local re = _G.Main.createButton(Visuals, "RakeEsp", function()
     end
 end)
 
--- Check for existing Rake object in the workspace
 for _, child in ipairs(workspace:GetChildren()) do
     if child.Name == "Rake" then
         rake2 = child
@@ -501,7 +486,7 @@ for _, child in ipairs(workspace:GetChildren()) do
     end
 end
 
--- Listen for the rake object being added to the workspace
+
 workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
         rake2 = child
@@ -510,8 +495,7 @@ workspace.ChildAdded:Connect(function(child)
         end
     end
 end)
-
--- Listen for the rake object being removed from the workspace
+
 workspace.ChildRemoved:Connect(function(child)
     if child.Name == "Rake" then
         cleanUpHighlights()
@@ -626,7 +610,6 @@ local connection
 local Pe = _G.Main.createButton(Visuals, "PlayersEsp", function()
     if not PlayersE then
         PlayersE = true
-        print("Players ESP Enabled")
         connection = runservice.RenderStepped:Connect(function()
             for _, player in pairs(game.Players:GetPlayers()) do
                 local char = player.Character
@@ -636,8 +619,7 @@ local Pe = _G.Main.createButton(Visuals, "PlayersEsp", function()
             end     
         end)
     else
-        PlayersE = false
-        print("Players ESP Disabled")
+        PlayersE = false
         if connection then
             connection:Disconnect()
             connection = nil
@@ -716,14 +698,12 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
     pointsExploitEnabled = not pointsExploitEnabled
 
     if pointsExploitEnabled then
-        -- Create GUI
         exploitGui = Instance.new("ScreenGui")
         exploitGui.Name = "ExploitGui"
         exploitGui.ResetOnSpawn = false
         exploitGui.IgnoreGuiInset = true
         exploitGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
-        -- Main Frame
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 200, 0, 100)
         frame.Position = UDim2.new(0.05, 0, 0.5, -50)
@@ -732,12 +712,10 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
         frame.BorderSizePixel = 0
         frame.Active = true
         frame.Parent = exploitGui
-
-        -- Dragging
+
         local dragDetector = Instance.new("UIDragDetector")
         dragDetector.Parent = frame
-
-        -- Label
+
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1, -10, 0, 25)
         label.Position = UDim2.new(0, 5, 0, 5)
@@ -748,8 +726,7 @@ local pointsExploitToggle = _G.Main.createButton(World, "Points Exploit", functi
         label.TextColor3 = Color3.new(1, 1, 1)
         label.BackgroundTransparency = 1
         label.Parent = frame
-
-        -- Button
+
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(1, -10, 0, 45)
         button.Position = UDim2.new(0, 5, 0, 50)
@@ -817,10 +794,9 @@ local function startInstaKillLoop()
 		end
 	end)
 end
-
--- Rake monitor: keep checking if Rake returns
+
 local function monitorRake()
-	if rakeMonitorConnection then return end -- already monitoring
+	if rakeMonitorConnection then return end 
 
 	rakeMonitorConnection = RunService.Heartbeat:Connect(function()
 		if instaKillEnabled then
@@ -833,8 +809,7 @@ local function monitorRake()
 		end
 	end)
 end
-
--- Toggle button
+
 local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
 	instaKillEnabled = not instaKillEnabled
 
@@ -844,8 +819,7 @@ local instaKillBtn = _G.Main.createButton(Combat, "Insta Kill Rake", function()
 		stopInstaKill()
 	end
 end)
-
--- Reset everything on player respawn
+
 LocalPlayer.CharacterAdded:Connect(function()
 	stopInstaKill()
 end)
