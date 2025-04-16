@@ -689,7 +689,7 @@ local thirdPersonButton = _G.Main.createButton(World, "Third Person", function()
             local player = game:GetService("Players").LocalPlayer
             if player then
                 player.CameraMaxZoomDistance = math.huge
-                player.CameraMinZoomDistance = 0.5
+                player.CameraMinZoomDistance = 5
             end
         end)
     else
