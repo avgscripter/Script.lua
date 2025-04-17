@@ -158,7 +158,7 @@ sapien.Enabled = false
 sapien.ResetOnSpawn = false
 
 local jb = {
-	FallingController = require(cloneref(ReplicatedStorage.Game.Falling)),
+    FallingController = require(cloneref(ReplicatedStorage.Game.Falling)),
     GunController = require(cloneref(ReplicatedStorage.Game.Item.Gun)),
     VehicleController = require(cloneref(ReplicatedStorage.Vehicle.VehicleUtils)),
     ItemSystemController = require(cloneref(ReplicatedStorage.Game.ItemSystem.ItemSystem)),
@@ -174,7 +174,7 @@ if not isfile("JailBreak/RemoteAddresses/ArrestAddress.txt") then writefile("Jai
 
 local Players = cloneref(game:GetService("Players"))
 local lp = cloneref(Players.LocalPlayer)
-local Backpack = cloneref(lp:WaitForChild("Folder"))
+local Backpack = lp:WaitForChild("Folder")
 local MaxArrest = rawget(require(game:GetService("ReplicatedStorage"):WaitForChild("Game"):WaitForChild("ItemConfig"):WaitForChild("Handcuffs")), "ArrestDistance")
 
 if type(MaxArrest) ~= "number" then
