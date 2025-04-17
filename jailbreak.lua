@@ -166,7 +166,7 @@ local jb = {
     BulletEmitter = require(cloneref(ReplicatedStorage.Game.ItemSystem.BulletEmitter))
 }
 debug.setconstant(debug.getupvalue(jb.FallingController.Init, 19), 9, "Archivable")
-task.spawn(function() while wait() do debug.getupvalue(jb.VehicleController.NitroShopVisible, 1).Nitro = 200 end
+task.spawn(function() while wait() do debug.getupvalue(jb.VehicleController.NitroShopVisible, 1).Nitro = 200 end end)
 
 task.spawn(function()if not isfolder("JailBreak") then makefolder("JailBreak") end
 if not isfolder("JailBreak/RemoteAddresses") then makefolder("JailBreak/RemoteAddresses") end
