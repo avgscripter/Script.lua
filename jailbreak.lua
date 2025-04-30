@@ -1,4 +1,5 @@
-local v1 = Instance.new("ScreenGui",game.Players.LocalPlayer.PlayerGui)
+local lplr = game:GetService("Players")
+local v1 = Instance.new("ScreenGui",lplr.PlayerGui)
 local text = "https://discord.gg/XqMG3zYrRr"
 setclipboard(text)
 local Frame = Instance.new("Frame")
@@ -101,13 +102,13 @@ TextLabel_5.BorderSizePixel = 0
 TextLabel_5.Position = UDim2.new(0.5, 0, 1, 0)
 TextLabel_5.Size = UDim2.new(0.300000012, 0, 0.400000006, 0)
 TextLabel_5.Font = Enum.Font.SourceSans
-TextLabel_5.Text = "URAVGSCRIPTER"
+TextLabel_5.Text = "Sapien Community"
 TextLabel_5.TextColor3 = Color3.fromRGB(0, 4, 254)
 TextLabel_5.TextScaled = true
 TextLabel_5.TextSize = 14.000
 TextLabel_5.TextWrapped = true
 
-local s1 = Instance.new("ScreenGui",game.Players.LocalPlayer.PlayerGui)
+local s1 = Instance.new("ScreenGui",lplr.PlayerGui)
 s1.Enabled = false
 s1.ResetOnSpawn = false
 local Frame = Instance.new("Frame")
@@ -897,7 +898,6 @@ end)
 
 _G.Main.createButton(Visuals, "Toggle Tracers", function()
     Tracers_Enabled = not Tracers_Enabled
-    
 end)
 
 TextButton2.MouseButton1Click:Connect(function()
