@@ -1,5 +1,5 @@
-local lplr = game:GetService("Players").LocalPlayer
-local v1 = Instance.new("ScreenGui",lplr.PlayerGui)
+local llpp = game:GetService("Players").LocalPlayer
+local v1 = Instance.new("ScreenGui",llpp.PlayerGui)
 local text = "https://discord.gg/XqMG3zYrRr"
 setclipboard(text)
 local Frame = Instance.new("Frame")
@@ -108,7 +108,7 @@ TextLabel_5.TextScaled = true
 TextLabel_5.TextSize = 14.000
 TextLabel_5.TextWrapped = true
 
-local s1 = Instance.new("ScreenGui",lplr.PlayerGui)
+local s1 = Instance.new("ScreenGui",llpp.PlayerGui)
 s1.Enabled = false
 s1.ResetOnSpawn = false
 local Frame = Instance.new("Frame")
@@ -435,7 +435,7 @@ local BounceHeight = 7
 local BounceSpeed = 100
 local BehindDistance = 5
 local CollisionCheckDistance = 4
-local sg = Instance.new("ScreenGui",lplr.PlayerGui)
+local sg = Instance.new("ScreenGui",llpp.PlayerGui)
 local StrafeGUI = Instance.new("Frame")
 StrafeGUI.Size = UDim2.new(0, 200, 0, 100)
 StrafeGUI.Position = UDim2.new(0.5, -100, 0.4, 0)
