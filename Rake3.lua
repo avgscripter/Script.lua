@@ -888,8 +888,58 @@ local nsdButton = _G.Main.createButton(World, "NoSlowDown", function()
     end
 end)
 
+local placeESPEnabled = false
 
+local places = {
+    powerstation = workspace.Map.PowerStation.StationFolder.StationParts.Model:GetChildren()[19],
+    safehouse = workspace.Map.SafeHouse.RakeBreak.Touch1,
+    observationtower = workspace.Map.ObservationTower:GetChildren()[12],
+    shop = workspace.Map.Shack.Merchant.Head,
+    basecamp = workspace.Map.BaseCamp.Parts:GetChildren()[8]:GetChildren()[65]
+}
 
+local espTexts = {}
+
+local function createESP()
+    for name, part in pairs(places) do
+        local text = Drawing.new("Text")
+        text.Text = name
+        text.Size = 16
+        text.Color = Color3.new(1, 1, 1)
+        text.Outline = true
+        text.Center = true
+        text.Visible = false
+        espTexts[name] = {text = text, part = part}
+    end
+end
+
+local function removeESP()
+    for _, v in pairs(espTexts) do
+        v.text:Remove()
+    end
+    espTexts = {}
+end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if not placeESPEnabled then return end
+    local camera = workspace.CurrentCamera
+    for _, v in pairs(espTexts) do
+        local pos, onScreen = camera:WorldToViewportPoint(v.part.Position)
+        v.text.Visible = onScreen
+        if onScreen then
+            v.text.Position = Vector2.new(pos.X, pos.Y)
+        end
+    end
+end)
+
+_G.Main.createButton(Visuals, "Place ESP", function()
+    placeESPEnabled = not placeESPEnabled
+    if placeESPEnabled then
+        createESP()
+    else
+        removeESP()
+    end
+end)
 
 TextButton2.MouseButton1Click:Connect(function()
 	sapien.Enabled = not sapien.Enabled
