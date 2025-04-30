@@ -348,7 +348,6 @@ local function isModuleHooked(module)
 	return false
 end
 
--- Function to hook stamina-related module
 local function hookStaminaModule()
 	for _, module in ipairs(getloadedmodules()) do
 		if module.Name == "M_H" and not isModuleHooked(module) then
@@ -368,7 +367,7 @@ local function hookStaminaModule()
 	end
 end
 
--- Disconnect the TKSMNA event handler
+
 local function disableAntiCheat()
 	if replicatedStorage:FindFirstChild("TKSMNA") and replicatedStorage.TKSMNA:FindFirstChild("Event") then
 		for _, connection in ipairs(getconnections(replicatedStorage.TKSMNA.Event)) do
@@ -379,11 +378,9 @@ local function disableAntiCheat()
 	end
 end
 
--- Initial execution
 disableAntiCheat()
 hookStaminaModule()
 
--- Re-hook after death (character respawn)
 localPlayer.CharacterAdded:Connect(function()
 	task.wait(1)
 	hookStaminaModule()
@@ -603,7 +600,7 @@ local function updateFlareGunHighlights()
         if flareGun then
             if FlareE then
            if not flareGun:FindFirstChild("Highlight") then
-                    toggleHighlight(flareGun, "Flaregun", flareGun, Color3.new(255, 255, 255), true)
+                    toggleHighlight(flareGun, "Flaregun", flareGun, Color3.new(127, 0, 255), true)
                 end
             else
                 if flareGun:FindFirstChild("Highlight") then
@@ -617,7 +614,6 @@ local connection3
 local Fe = _G.Main.createButton(Visuals, "FlareGunEsp", function()
     FlareE = not FlareE
     
-    print("FlareGun ESP Toggled: " .. tostring(FlareE))
 
     if FlareE then
         connection3 = runservice.RenderStepped:Connect(updateFlareGunHighlights)
@@ -905,7 +901,7 @@ local function createESP()
         local text = Drawing.new("Text")
         text.Text = name
         text.Size = 16
-        text.Color = Color3.new(1, 1, 1)
+        text.Color = Color3.new(0, 0, 1)
         text.Outline = true
         text.Center = true
         text.Visible = false
