@@ -1,4 +1,4 @@
-local lplr = game:GetService("Players")
+local lplr = game:GetService("Players").LocalPlayer
 local v1 = Instance.new("ScreenGui",lplr.PlayerGui)
 local text = "https://discord.gg/XqMG3zYrRr"
 setclipboard(text)
