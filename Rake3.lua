@@ -986,6 +986,7 @@ local function createInfoGui()
  -- Live Update Loop
  task.spawn(function()
   while infoGui and infoGuiToggle do
+   local ReplicatedStorage = game:GetService("ReplicatedStorage")
    local targetVal = workspace:FindFirstChild("Rake") and workspace.Rake:FindFirstChild("TargetVal") and workspace.Rake.TargetVal.Value
    local powerVal = ReplicatedStorage:FindFirstChild("PowerValues") and ReplicatedStorage.PowerValues:FindFirstChild("PowerLevel")
    local timerVal = ReplicatedStorage:FindFirstChild("Timer")
