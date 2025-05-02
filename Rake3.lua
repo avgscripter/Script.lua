@@ -177,7 +177,6 @@ local FullBrightW = false
 local NoFallDamageW = false
 local autoopenlootW = false
  workspace.Filter.InvisibleWalls:Destroy()
- workspace.Filter.ServerInvisibleWalls:Destroy()
 
 -- Functions
 
@@ -934,6 +933,193 @@ _G.Main.createButton(Visuals, "Place ESP", function()
         createESP()
     else
         removeESP()
+    end
+end)
+local Players = game:GetService("Players")
+local PathfindingService = game:GetService("PathfindingService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local walkSpeed = 30
+local fleeSpeed = 30
+local fleeDistance = 25
+local dangerDistance = 60
+local cavePosition = Vector3.new(-171.967438, 19.4830437, 41.4573059)
+local hasSold = false
+
+local rayParams = RaycastParams.new()
+rayParams.FilterDescendantsInstances = {char}
+rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+rayParams.IgnoreWater = true
+
+local function tweenTo(pos, speed)
+	local dist = (hrp.Position - pos).Magnitude
+	local tween = TweenService:Create(hrp, TweenInfo.new(dist / speed, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
+	tween:Play()
+	tween.Completed:Wait()
+end
+
+local function isPathClear(fromPos, toPos)
+	local direction = (toPos - fromPos)
+	local ray = workspace:Raycast(fromPos, direction, rayParams)
+	return not ray
+end
+
+local function moveTo(pos, speed)
+	local path = PathfindingService:CreatePath({AgentRadius = 2, AgentHeight = 5, AgentCanJump = false})
+	path:ComputeAsync(hrp.Position, pos)
+	if path.Status ~= Enum.PathStatus.Success then return false end
+
+	for _, waypoint in ipairs(path:GetWaypoints()) do
+		tweenTo(waypoint.Position, speed or walkSpeed)
+	end
+
+	return true
+end
+
+local function findScraps()
+	local scraps = {}
+	for _, folder in pairs(workspace.Filter.ScrapSpawns:GetChildren()) do
+		for _, item in pairs(folder:GetChildren()) do
+			if item:IsA("Model") and item:FindFirstChild("Scrap") and item.Scrap:IsDescendantOf(workspace) then
+				table.insert(scraps, item.Scrap)
+			end
+		end
+	end
+	return scraps
+end
+
+local function sellScraps()
+	local shop = workspace.Map.Shack.Merchant:FindFirstChild("Head")
+	if not shop then return end
+	moveTo(shop.Position)
+	for i = 1, math.random(10000, 15000), 1 do
+		ReplicatedStorage:WaitForChild("ShopEvent"):FireServer("SellScraps", "Scraps")
+	end
+	wait(20)
+end
+
+local function fleeFromRake(rakeHRP)
+	if not rakeHRP then return end
+	local dir = (hrp.Position - rakeHRP.Position).Unit
+	local fleePos = hrp.Position + dir * fleeDistance
+	if isPathClear(hrp.Position, fleePos) then
+		moveTo(fleePos, fleeSpeed)
+	else
+		local sideDir = Vector3.new(-dir.Z, 0, dir.X).Unit
+		local sidePos = hrp.Position + sideDir * fleeDistance
+		if isPathClear(hrp.Position, sidePos) then
+			moveTo(sidePos, fleeSpeed)
+		end
+	end
+end
+
+local function isRakeNearby()
+	local rake = workspace:FindFirstChild("Rake")
+	local rakeHRP = rake and rake:FindFirstChild("HumanoidRootPart")
+	if not rakeHRP then return false end
+	local distance = (rakeHRP.Position - hrp.Position).Magnitude
+	if distance <= 22 then
+		fleeFromRake(rakeHRP)
+		return true
+	end
+	return false
+end
+
+local function waitAtCaveUntilRakeDefeated()
+	moveTo(cavePosition,30) 
+		local offset = Vector3.new(math.random(-4, 4), 0, math.random(-4, 4))
+		tweenTo(hrp.Position + offset, 10)
+		repeat task.wait(2) until ReplicatedStorage:FindFirstChild("RakeDefeated").Value 
+end
+
+local function collectScraps()
+	local scraps = findScraps()
+	for _, scrap in ipairs(scraps) do
+		if not scrap:IsDescendantOf(workspace) then continue end
+		if workspace:FindFirstChild("Rake") and (workspace.Rake.HumanoidRootPart.Position - scrap.Position).Magnitude < dangerDistance then continue end
+		if isRakeNearby() then continue end
+		local tries = 0
+		while tries < 3 do
+			if moveTo(scrap.Position) then break end
+			if isRakeNearby() then break end
+			tries += 1
+		end
+	end
+end
+
+local rakeRunning = false
+local rakeThread
+
+local function startRakeScript()
+    if rakeRunning then return end
+    rakeRunning = true
+    rakeThread = task.spawn(function()
+        while rakeRunning do
+            task.wait(0.2)
+
+            local isNight = ReplicatedStorage:FindFirstChild("Night") and ReplicatedStorage.Night.Value
+            local timerVal = ReplicatedStorage:FindFirstChild("Timer") and ReplicatedStorage.Timer.Value or 999
+            local rakeDefeated = ReplicatedStorage:FindFirstChild("RakeDefeated") and ReplicatedStorage.RakeDefeated.Value
+            local scrapFolder = player.Backpack:FindFirstChild("ScrapFolder")
+            local scrapPoints = scrapFolder and scrapFolder:FindFirstChild("Points") and scrapFolder.Points.Value or 0
+
+            if isRakeNearby() then continue end
+
+            if timerVal <= 20 and not rakeDefeated and not waitingForRakeDefeat then
+                waitingForRakeDefeat = true
+                waitAtCaveUntilRakeDefeated()
+                waitingForRakeDefeat = false
+                hasSold = false
+                continue
+            end
+
+            if waitingForRakeDefeat then continue end
+
+            local leaderstats = player:FindFirstChild("leaderstats")
+            local currentPoints = leaderstats and leaderstats:FindFirstChild("Points") and leaderstats.Points.Value or 0
+
+            if isNight then
+                hasSold = false
+                collectScraps()
+            elseif rakeDefeated then
+                if scrapPoints > 0 and currentPoints < 100000 and not hasSold then
+                    sellScraps()
+                    hasSold = true
+                end
+                collectScraps()
+            elseif scrapPoints > 0 and not hasSold then
+                if currentPoints < 100000 then
+                    sellScraps()
+                    hasSold = true
+                end
+            end
+        end
+    end)
+end
+
+local function stopRakeScript()
+    rakeRunning = false
+    if rakeThread then
+        task.cancel(rakeThread)
+    end
+end
+
+local rakeBotToggle = false
+
+local rakeBotButton = _G.Main.createButton(World, "BotPlayer(fast wins n points)", function()
+    rakeBotToggle = not rakeBotToggle
+
+    if rakeBotToggle then
+        startRakeScript()
+    else
+        stopRakeScript()
     end
 end)
 
