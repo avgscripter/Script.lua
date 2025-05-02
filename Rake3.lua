@@ -942,23 +942,27 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local humanoid = char:WaitForChild("Humanoid")
-local hrp = char:WaitForChild("HumanoidRootPart")
-
 local walkSpeed = 30
 local fleeSpeed = 30
 local fleeDistance = 25
 local dangerDistance = 60
 local cavePosition = Vector3.new(-171.967438, 19.4830437, 41.4573059)
 local hasSold = false
+local waitingForRakeDefeat = false
+
+local function getCharacter()
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:WaitForChild("Humanoid")
+	local hrp = character:WaitForChild("HumanoidRootPart")
+	return character, humanoid, hrp
+end
 
 local rayParams = RaycastParams.new()
-rayParams.FilterDescendantsInstances = {char}
 rayParams.FilterType = Enum.RaycastFilterType.Blacklist
 rayParams.IgnoreWater = true
 
 local function tweenTo(pos, speed)
+	local _, _, hrp = getCharacter()
 	local dist = (hrp.Position - pos).Magnitude
 	local tween = TweenService:Create(hrp, TweenInfo.new(dist / speed, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
 	tween:Play()
@@ -967,11 +971,13 @@ end
 
 local function isPathClear(fromPos, toPos)
 	local direction = (toPos - fromPos)
+	rayParams.FilterDescendantsInstances = {player.Character}
 	local ray = workspace:Raycast(fromPos, direction, rayParams)
 	return not ray
 end
 
 local function moveTo(pos, speed)
+	local _, _, hrp = getCharacter()
 	local path = PathfindingService:CreatePath({AgentRadius = 2, AgentHeight = 5, AgentCanJump = false})
 	path:ComputeAsync(hrp.Position, pos)
 	if path.Status ~= Enum.PathStatus.Success then return false end
@@ -1007,6 +1013,7 @@ end
 
 local function fleeFromRake(rakeHRP)
 	if not rakeHRP then return end
+	local _, _, hrp = getCharacter()
 	local dir = (hrp.Position - rakeHRP.Position).Unit
 	local fleePos = hrp.Position + dir * fleeDistance
 	if isPathClear(hrp.Position, fleePos) then
@@ -1021,6 +1028,7 @@ local function fleeFromRake(rakeHRP)
 end
 
 local function isRakeNearby()
+	local _, _, hrp = getCharacter()
 	local rake = workspace:FindFirstChild("Rake")
 	local rakeHRP = rake and rake:FindFirstChild("HumanoidRootPart")
 	if not rakeHRP then return false end
@@ -1033,17 +1041,19 @@ local function isRakeNearby()
 end
 
 local function waitAtCaveUntilRakeDefeated()
-	moveTo(cavePosition,30) 
-		local offset = Vector3.new(math.random(-4, 4), 0, math.random(-4, 4))
-		tweenTo(hrp.Position + offset, 10)
-		repeat task.wait(2) until ReplicatedStorage:FindFirstChild("RakeDefeated").Value 
+	moveTo(cavePosition, 30)
+	local _, _, hrp = getCharacter()
+	local offset = Vector3.new(math.random(-4, 4), 0, math.random(-4, 4))
+	tweenTo(hrp.Position + offset, 10)
+	repeat task.wait(2) until ReplicatedStorage:FindFirstChild("RakeDefeated").Value
 end
 
 local function collectScraps()
 	local scraps = findScraps()
 	for _, scrap in ipairs(scraps) do
 		if not scrap:IsDescendantOf(workspace) then continue end
-		if workspace:FindFirstChild("Rake") and (workspace.Rake.HumanoidRootPart.Position - scrap.Position).Magnitude < dangerDistance then continue end
+		local rake = workspace:FindFirstChild("Rake")
+		if rake and (rake.HumanoidRootPart.Position - scrap.Position).Magnitude < dangerDistance then continue end
 		if isRakeNearby() then continue end
 		local tries = 0
 		while tries < 3 do
@@ -1058,70 +1068,77 @@ local rakeRunning = false
 local rakeThread
 
 local function startRakeScript()
-    if rakeRunning then return end
-    rakeRunning = true
-    rakeThread = task.spawn(function()
-        while rakeRunning do
-            task.wait(0.2)
+	if rakeRunning then return end
 
-            local isNight = ReplicatedStorage:FindFirstChild("Night") and ReplicatedStorage.Night.Value
-            local timerVal = ReplicatedStorage:FindFirstChild("Timer") and ReplicatedStorage.Timer.Value or 999
-            local rakeDefeated = ReplicatedStorage:FindFirstChild("RakeDefeated") and ReplicatedStorage.RakeDefeated.Value
-            local scrapFolder = player.Backpack:FindFirstChild("ScrapFolder")
-            local scrapPoints = scrapFolder and scrapFolder:FindFirstChild("Points") and scrapFolder.Points.Value or 0
+	if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+		player.CharacterAdded:Wait()
+		task.wait(1)
+	end
 
-            if isRakeNearby() then continue end
+	rakeRunning = true
+	rakeThread = task.spawn(function()
+		while rakeRunning do
+			task.wait(0.05)
 
-            if timerVal <= 20 and not rakeDefeated and not waitingForRakeDefeat then
-                waitingForRakeDefeat = true
-                waitAtCaveUntilRakeDefeated()
-                waitingForRakeDefeat = false
-                hasSold = false
-                continue
-            end
+			local isNight = ReplicatedStorage:FindFirstChild("Night") and ReplicatedStorage.Night.Value
+			local timerVal = ReplicatedStorage:FindFirstChild("Timer") and ReplicatedStorage.Timer.Value or 999
+			local rakeDefeated = ReplicatedStorage:FindFirstChild("RakeDefeated") and ReplicatedStorage.RakeDefeated.Value
+			local scrapFolder = player.Backpack:FindFirstChild("ScrapFolder")
+			local scrapPoints = scrapFolder and scrapFolder:FindFirstChild("Points") and scrapFolder.Points.Value or 0
 
-            if waitingForRakeDefeat then continue end
+			if isRakeNearby() then continue end
 
-            local leaderstats = player:FindFirstChild("leaderstats")
-            local currentPoints = leaderstats and leaderstats:FindFirstChild("Points") and leaderstats.Points.Value or 0
+			if timerVal <= 20 and not rakeDefeated and not waitingForRakeDefeat then
+				waitingForRakeDefeat = true
+				waitAtCaveUntilRakeDefeated()
+				waitingForRakeDefeat = false
+				hasSold = false
+				continue
+			end
 
-            if isNight then
-                hasSold = false
-                collectScraps()
-            elseif rakeDefeated then
-                if scrapPoints > 0 and currentPoints < 100000 and not hasSold then
-                    sellScraps()
-                    hasSold = true
-                end
-                collectScraps()
-            elseif scrapPoints > 0 and not hasSold then
-                if currentPoints < 100000 then
-                    sellScraps()
-                    hasSold = true
-                end
-            end
-        end
-    end)
+			if waitingForRakeDefeat then continue end
+
+			local leaderstats = player:FindFirstChild("leaderstats")
+			local currentPoints = leaderstats and leaderstats:FindFirstChild("Points") and leaderstats.Points.Value or 0
+
+			if isNight then
+				hasSold = false
+				collectScraps()
+			elseif rakeDefeated then
+				if scrapPoints > 0 and currentPoints < 100000 and not hasSold then
+					sellScraps()
+					hasSold = true
+				end
+				collectScraps()
+			elseif scrapPoints > 0 and not hasSold then
+				if currentPoints < 100000 then
+					sellScraps()
+					hasSold = true
+				end
+			end
+		end
+	end)
 end
 
 local function stopRakeScript()
-    rakeRunning = false
-    if rakeThread then
-        task.cancel(rakeThread)
-    end
+	rakeRunning = false
+	if rakeThread and coroutine.status(rakeThread) ~= "dead" then
+		task.cancel(rakeThread)
+	end
+	rakeThread = nil
 end
 
 local rakeBotToggle = false
 
-local rakeBotButton = _G.Main.createButton(World, "BotPlayer(fast wins n points)", function()
-    rakeBotToggle = not rakeBotToggle
-
-    if rakeBotToggle then
-        startRakeScript()
-    else
-        stopRakeScript()
-    end
+local rakeBotButton = _G.Main.createButton(World, "BotPlayer (fast wins + points)", function()
+	rakeBotToggle = not rakeBotToggle
+	if rakeBotToggle then
+		startRakeScript()
+	else
+		stopRakeScript()
+	end
 end)
+
 
 TextButton2.MouseButton1Click:Connect(function()
 	sapien.Enabled = not sapien.Enabled
