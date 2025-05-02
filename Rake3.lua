@@ -1121,10 +1121,11 @@ end
 
 local function waitAtCaveUntilRakeDefeated()
 	moveTo(cavePosition, 30)
-	local _, _, hrp = getCharacter()
-	local offset = Vector3.new(math.random(-4, 4), 0, math.random(-4, 4))
-	tweenTo(hrp.Position + offset, 10)
-	repeat task.wait(2) until ReplicatedStorage:FindFirstChild("RakeDefeated").Value
+	while not rakeDefeated and isNight do
+	      local _, _, hrp = getCharacter()
+	      local offset = Vector3.new(math.random(-4, 4), 0, math.random(-4, 4))
+	      tweenTo(hrp.Position + offset, 10)
+	end
 end
 
 local function collectScraps()
