@@ -987,11 +987,11 @@ local function createInfoGui()
  task.spawn(function()
   while infoGui and infoGuiToggle do
    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-   local targetVal = workspace:FindFirstChild("Rake") and workspace.Rake:FindFirstChild("TargetVal") and workspace.Rake.TargetVal.Value.Name
+   local targetVal = workspace:FindFirstChild("Rake") and workspace.Rake:FindFirstChild("TargetVal") and workspace.Rake.TargetVal.Value
    local powerVal = ReplicatedStorage:FindFirstChild("PowerValues") and ReplicatedStorage.PowerValues:FindFirstChild("PowerLevel")
    local timerVal = ReplicatedStorage:FindFirstChild("Timer")
 
-   targetLabel.Text = "Target: " .. (targetVal and targetVal.Name or "N/A")
+   targetLabel.Text = "Target: " .. (targetVal and targetVal.Parent.Name or "N/A")
    powerLabel.Text = "Power: " .. (powerVal and powerVal.Value or "N/A")
    timerLabel.Text = "Timer: " .. (timerVal and timerVal.Value or "N/A")
 
