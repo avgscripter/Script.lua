@@ -935,6 +935,84 @@ _G.Main.createButton(Visuals, "Place ESP", function()
         removeESP()
     end
 end)
+
+local infoGuiToggle = false
+local infoGui
+
+local function createInfoGui()
+ if infoGui then infoGui:Destroy() end
+
+ infoGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+ infoGui.Name = "InfoGui"
+
+ local bg = Instance.new("Frame", infoGui)
+ bg.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+ bg.BackgroundTransparency = 0.2
+ bg.Size = UDim2.new(0, 200, 0, 100)
+ bg.Position = UDim2.new(0, 100, 0, 100)
+ bg.Name = "InfoFrame"
+ bg.Active = true
+
+ local drag = Instance.new("UIDragDetector")
+ drag.Parent = bg
+
+ local targetLabel = Instance.new("TextLabel", bg)
+ targetLabel.Size = UDim2.new(1, 0, 0, 30)
+ targetLabel.Position = UDim2.new(0, 0, 0, 0)
+ targetLabel.BackgroundTransparency = 1
+ targetLabel.TextColor3 = Color3.new(1, 1, 1)
+ targetLabel.Font = Enum.Font.SourceSansBold
+ targetLabel.TextScaled = true
+ targetLabel.Text = "Target: ..."
+
+ local powerLabel = Instance.new("TextLabel", bg)
+ powerLabel.Size = UDim2.new(1, 0, 0, 30)
+ powerLabel.Position = UDim2.new(0, 0, 0, 30)
+ powerLabel.BackgroundTransparency = 1
+ powerLabel.TextColor3 = Color3.new(1, 1, 1)
+ powerLabel.Font = Enum.Font.SourceSansBold
+ powerLabel.TextScaled = true
+ powerLabel.Text = "Power: ..."
+
+ local timerLabel = Instance.new("TextLabel", bg)
+ timerLabel.Size = UDim2.new(1, 0, 0, 30)
+ timerLabel.Position = UDim2.new(0, 0, 0, 60)
+ timerLabel.BackgroundTransparency = 1
+ timerLabel.TextColor3 = Color3.new(1, 1, 1)
+ timerLabel.Font = Enum.Font.SourceSansBold
+ timerLabel.TextScaled = true
+ timerLabel.Text = "Timer: ..."
+
+ -- Live Update Loop
+ task.spawn(function()
+  while infoGui and infoGuiToggle do
+   local targetVal = workspace:FindFirstChild("Rake") and workspace.Rake:FindFirstChild("TargetVal") and workspace.Rake.TargetVal.Value
+   local powerVal = ReplicatedStorage:FindFirstChild("PowerValues") and ReplicatedStorage.PowerValues:FindFirstChild("PowerLevel")
+   local timerVal = ReplicatedStorage:FindFirstChild("Timer")
+
+   targetLabel.Text = "Target: " .. (targetVal and targetVal.Name or "N/A")
+   powerLabel.Text = "Power: " .. (powerVal and powerVal.Value or "N/A")
+   timerLabel.Text = "Timer: " .. (timerVal and timerVal.Value or "N/A")
+
+   task.wait(0.2)
+  end
+ end)
+end
+
+-- Toggle Button
+_G.Main.createButton(World, "Show Info (Target/Power/Timer)", function()
+ infoGuiToggle = not infoGuiToggle
+ if infoGuiToggle then
+  createInfoGui()
+ else
+  if infoGui then
+   infoGui:Destroy()
+   infoGui = nil
+  end
+ end
+end)
+
+
 local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
