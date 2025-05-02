@@ -1001,7 +1001,7 @@ local function createInfoGui()
 end
 
 -- Toggle Button
-_G.Main.createButton(World, "Show Info (Target/Power/Timer)", function()
+_G.Main.createButton(Visuals, "Show Info (Target/Power/Timer)", function()
  infoGuiToggle = not infoGuiToggle
  if infoGuiToggle then
   createInfoGui()
