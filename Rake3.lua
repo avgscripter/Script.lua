@@ -1068,57 +1068,52 @@ local rakeRunning = false
 local rakeThread
 
 local function startRakeScript()
-	if rakeRunning then return end
+ if rakeRunning then return end
 
-	if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-		player.CharacterAdded:Wait()
-		task.wait(1)
-	end
+ if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+  player.CharacterAdded:Wait()
+  task.wait(1)
+ end
 
-	rakeRunning = true
-	rakeThread = task.spawn(function()
-		while rakeRunning do
-			task.wait(0.05)
+ rakeRunning = true
+ rakeThread = task.spawn(function()
+  while rakeRunning do
+   task.wait(0.05)
 
-			local isNight = ReplicatedStorage:FindFirstChild("Night") and ReplicatedStorage.Night.Value
-			local timerVal = ReplicatedStorage:FindFirstChild("Timer") and ReplicatedStorage.Timer.Value or 999
-			local rakeDefeated = ReplicatedStorage:FindFirstChild("RakeDefeated") and ReplicatedStorage.RakeDefeated.Value
-			local scrapFolder = player.Backpack:FindFirstChild("ScrapFolder")
-			local scrapPoints = scrapFolder and scrapFolder:FindFirstChild("Points") and scrapFolder.Points.Value or 0
+   local isNight = ReplicatedStorage:FindFirstChild("Night") and ReplicatedStorage.Night.Value
+   local timerVal = ReplicatedStorage:FindFirstChild("Timer") and ReplicatedStorage.Timer.Value or 999
+   local rakeDefeated = ReplicatedStorage:FindFirstChild("RakeDefeated") and ReplicatedStorage.RakeDefeated.Value
+   local scrapFolder = player.Backpack:FindFirstChild("ScrapFolder")
+   local scrapPoints = scrapFolder and scrapFolder:FindFirstChild("Points") and scrapFolder.Points.Value or 0
 
-			if isRakeNearby() then continue end
+   if isRakeNearby() then continue end
 
-			if isNight and timerVal <= 20 and not rakeDefeated and not waitingForRakeDefeat then
+   if isNight and timerVal <= 20 and not rakeDefeated and not waitingForRakeDefeat then
+    waitingForRakeDefeat = true
+    waitAtCaveUntilRakeDefeated()
+    waitingForRakeDefeat = false
+    hasSold = false
+    continue
+   end
 
-				waitingForRakeDefeat = true
-				waitAtCaveUntilRakeDefeated()
-				waitingForRakeDefeat = false
-				hasSold = false
-				continue
-			end
+   if waitingForRakeDefeat then continue end
 
-			if waitingForRakeDefeat then continue end
+   local leaderstats = player:FindFirstChild("leaderstats")
+   local currentPoints = leaderstats and leaderstats:FindFirstChild("Points") and leaderstats.Points.Value or 0
 
-			local leaderstats = player:FindFirstChild("leaderstats")
-			local currentPoints = leaderstats and leaderstats:FindFirstChild("Points") and leaderstats.Points.Value or 0
+   if isNight then
+    hasSold = false
+    collectScraps()
 
-			if isNight then
-				hasSold = false
-				collectScraps()
-			elseif rakeDefeated then
-				if scrapPoints > 0 and currentPoints < 100000 and not hasSold then
-					sellScraps()
-					hasSold = true
-				end
-				collectScraps()
-			elseif scrapPoints > 0 and not hasSold then
-				if currentPoints < 100000 then
-					sellScraps()
-					hasSold = true
-				end
-			end
-		end
-	end)
+   elseif not isNight then
+    if scrapPoints > 0 and currentPoints < 100000 and not hasSold then
+     sellScraps()
+     hasSold = true
+    end
+    collectScraps()
+   end
+  end
+ end)
 end
 
 local function stopRakeScript()
