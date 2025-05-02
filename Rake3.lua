@@ -1088,7 +1088,7 @@ local function startRakeScript()
 
    if isRakeNearby() then continue end
 
-   if isNight and timerVal <= 20 and not rakeDefeated and not waitingForRakeDefeat then
+   if not isNight and timerVal <= 20 and not rakeDefeated and not waitingForRakeDefeat then
     waitingForRakeDefeat = true
     waitAtCaveUntilRakeDefeated()
     waitingForRakeDefeat = false
