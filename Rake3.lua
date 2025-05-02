@@ -1120,7 +1120,8 @@ local function isRakeNearby()
 end
 
 local function waitAtCaveUntilRakeDefeated()
-	moveTo(cavePosition, 30)
+	moveTo(cavePosition, 32)
+	task.wait(2)
 	while not rakeDefeated and isNight do
 	      local _, _, hrp = getCharacter()
 	      local offset = Vector3.new(math.random(-4, 4), 0, math.random(-4, 4))
@@ -1168,7 +1169,7 @@ local function startRakeScript()
 
    if isRakeNearby() then continue end
 
-   if not isNight and timerVal <= 20 and not rakeDefeated and not waitingForRakeDefeat then
+   if not isNight and timerVal <= 7 and not rakeDefeated and not waitingForRakeDefeat then
     waitingForRakeDefeat = true
     waitAtCaveUntilRakeDefeated()
     waitingForRakeDefeat = false
