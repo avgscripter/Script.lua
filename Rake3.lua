@@ -987,7 +987,7 @@ local function createInfoGui()
  task.spawn(function()
   while infoGui and infoGuiToggle do
    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-   local targetVal = workspace:FindFirstChild("Rake") and workspace.Rake:FindFirstChild("TargetVal") and workspace.Rake.TargetVal.Value
+   local targetVal = workspace:FindFirstChild("Rake") and workspace.Rake:FindFirstChild("TargetVal") and workspace.Rake.TargetVal.Value.Name
    local powerVal = ReplicatedStorage:FindFirstChild("PowerValues") and ReplicatedStorage.PowerValues:FindFirstChild("PowerLevel")
    local timerVal = ReplicatedStorage:FindFirstChild("Timer")
 
@@ -1022,8 +1022,8 @@ local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local walkSpeed = 30
-local fleeSpeed = 30
-local fleeDistance = 25
+local fleeSpeed = 31
+local fleeDistance = 40
 local dangerDistance = 60
 local cavePosition = Vector3.new(-171.967438, 19.4830437, 41.4573059)
 local hasSold = false
