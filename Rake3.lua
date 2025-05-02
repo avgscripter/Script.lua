@@ -176,7 +176,7 @@ local AutoOpenDoorW = false
 local FullBrightW = false
 local NoFallDamageW = false
 local autoopenlootW = false
- workspace.Filter.InvisibleWalls:Destroy()
+workspace.Filter.InvisibleWalls:Destroy()
 
 -- Functions
 
@@ -294,10 +294,10 @@ coroutine.wrap(function()
 	local player = game.Players.LocalPlayer
 	local camera = workspace.CurrentCamera
 
-	-- Variable to track the mouse lock state
+
 	local isMouseLocked = true
 
-	-- Function to toggle mouse lock
+
 	local function toggleMouseLock()
 		isMouseLocked = not isMouseLocked
 		if isMouseLocked then
@@ -309,7 +309,7 @@ coroutine.wrap(function()
 		end
 	end
 
-	-- Listen for key press
+
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if gameProcessed then return end -- Ignore input if game is processing it
 
@@ -400,12 +400,11 @@ local auraConnection
 local stunstick = false
 local lastHit = 0
 
--- Function to dynamically get the latest Rake instance
 local function getRake()
     return workspace:FindFirstChild("Rake")
 end
 
--- Aura function with cooldown and error prevention
+
 local function aura()
     local char = player.Character
     local rake = getRake()
@@ -414,7 +413,7 @@ local function aura()
         local stunStick = char.StunStick
         local now = tick()
 
-        -- Only attack every 0.5s
+        
         if now - lastHit >= 0.2 then
             lastHit = now
             pcall(function()
@@ -426,7 +425,6 @@ local function aura()
     end
 end
 
--- Starts the aura loop using Heartbeat
 local function startAuraLoop()
     if auraConnection then auraConnection:Disconnect() end
 
@@ -437,7 +435,7 @@ local function startAuraLoop()
     end)
 end
 
--- Button toggle logic
+
 local stunbut = _G.Main.createButton(Combat, "StunStickAura", function()
     stunstick = not stunstick
 
@@ -448,7 +446,6 @@ local stunbut = _G.Main.createButton(Combat, "StunStickAura", function()
     end
 end)
 
--- Restart aura loop when Rake respawns
 workspace.ChildAdded:Connect(function(child)
     if child.Name == "Rake" then
         task.wait(0.2)
@@ -458,13 +455,13 @@ workspace.ChildAdded:Connect(function(child)
     end
 end)
 
--- Restart aura loop when player respawns
 player.CharacterAdded:Connect(function()
     task.wait(1)
     if stunstick then
         startAuraLoop()
     end
-end)--Visuals
+end)
+
 local Visuals = _G.Main.createFrame(sapien,UDim2.new(0.557, -105,0.29, -3),nil,"Visuals","VisualsFrame")
 
 
@@ -584,7 +581,7 @@ end
       local connection2 = runservice.RenderStepped:Connect(updateLootBoxHighlights)
 
 
--- Button to toggle the LootBoxE variable
+
 local Le = _G.Main.createButton(Visuals, "LootBoxEsp", function()
     LootBoxE = not LootBoxE
     print("LootBox ESP Toggled: " .. tostring(LootBoxE))
