@@ -176,7 +176,6 @@ local AutoOpenDoorW = false
 local FullBrightW = false
 local NoFallDamageW = false
 local autoopenlootW = false
-workspace.Filter.InvisibleWalls:Destroy()
 
 -- Functions
 
@@ -324,7 +323,6 @@ end)()
 local frameforwatermark = _G.Main.createmarkframe(w1)
 local NoSlowDown = _G.Main.createwatermark(frameforwatermark,"Infinite Stamina")
 local NoFallDamage = _G.Main.createwatermark(frameforwatermark,"NoFallDamage")
-local Remove = _G.Main.createwatermark(frameforwatermark,"NoBorderwalls")
 nsd()
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local players = game:GetService("Players")
