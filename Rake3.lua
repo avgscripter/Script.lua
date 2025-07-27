@@ -1057,8 +1057,8 @@ local function stepTo(target)
   -- Ground detection, raycast downward from 3 studs above current step
   local ray = Workspace:Raycast(nextPos + Vector3.new(0, 3, 0), Vector3.new(0, -10, 0), rayParams)
   if ray then
-   local y = ray.Position.Y + 1.5 -- only lift ~1.5 studs for anti-cheat safety
-   nextPos = Vector3.new(nextPos.X, y, nextPos.Z)
+   local y = ray.Position.Y -- only lift ~1.5 studs for anti-cheat safety
+   nextPos = Vector3.new(nextPos.X, nextpos.Y, nextPos.Z)
   else
    nextPos = Vector3.new(nextPos.X, hrp.Position.Y, nextPos.Z) -- stay at same height if ground not found
   end
