@@ -1094,13 +1094,13 @@ local function moveTo(pos)
         local dist = (wp.Position - hrp.Position).Magnitude
         local duration = dist / walkSpeed
         local startTime = tick()
-
+local Runservicenam = game:GetService("RunService")
         while (tick() - startTime) < duration do
             local delta = tick() - startTime
             local progress = math.clamp(delta / duration, 0, 1)
             local targetPos = hrp.Position:Lerp(wp.Position, progress)
             hrp.CFrame = CFrame.new(targetPos)
-            RunService.Heartbeat:Wait()
+            Runservicenam.Heartbeat:Wait()
         end
 
         -- Snap to exact position at the end
