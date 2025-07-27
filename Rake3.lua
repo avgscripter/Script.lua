@@ -1046,22 +1046,22 @@ local function isRakeNearby()
  end
  return false
 end
-
 local function stepTo(target)
  local _, _, hrp = getCharacter()
- local dir = (target - hrp.Position).Unit
  while (hrp.Position - target).Magnitude > 2 do
   if isRakeNearby() then return end
-  local step = dir * (walkSpeed / 20)
+  local dir = (target - hrp.Position).Unit
+  local step = dir * (walkSpeed / 60) -- small step size (~0.5-1.0 stud per frame)
   local nextPos = hrp.Position + step
   local ray = Workspace:Raycast(nextPos + Vector3.new(0, 5, 0), Vector3.new(0, -50, 0), rayParams)
   if ray then
    nextPos = Vector3.new(nextPos.X, ray.Position.Y + 3, nextPos.Z)
   end
   hrp.CFrame = CFrame.new(nextPos)
-  task.wait(0.9)
+  task.wait(0.03) -- ~30-33 FPS pace (smooth, low chance of flagging)
  end
 end
+
 
 local function moveTo(pos)
  local _, _, hrp = getCharacter()
