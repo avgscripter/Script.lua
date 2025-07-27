@@ -1013,6 +1013,7 @@ local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local walkSpeed = 30
@@ -1020,186 +1021,155 @@ local dangerDistance = 60
 local hasSold = false
 
 local function getCharacter()
- local character = player.Character or player.CharacterAdded:Wait()
- local humanoid = character:WaitForChild("Humanoid")
- local hrp = character:WaitForChild("HumanoidRootPart")
- return character, humanoid, hrp
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:WaitForChild("Humanoid")
+	local hrp = character:WaitForChild("HumanoidRootPart")
+	return character, humanoid, hrp
 end
-
-local rayParams = RaycastParams.new()
-rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-rayParams.IgnoreWater = true
 
 local function isRakeNearby()
- local _, _, hrp = getCharacter()
- local rake = workspace:FindFirstChild("Rake")
- local rakeHRP = rake and rake:FindFirstChild("HumanoidRootPart")
- if not rakeHRP then return false end
- local distance = (rakeHRP.Position - hrp.Position).Magnitude
- if distance <= dangerDistance then
-  local dir = (hrp.Position - rakeHRP.Position).Unit
-  local target = hrp.Position + dir * 60
-  local newY = Workspace:FindPartOnRayWithIgnoreList(Ray.new(target + Vector3.new(0, 50, 0), Vector3.new(0, -100, 0)), {player.Character})
-  target = Vector3.new(target.X, (newY and newY.Position.Y + 3) or target.Y, target.Z)
-  hrp.CFrame = CFrame.new(target)
-  return true
- end
- return false
+	local _, _, hrp = getCharacter()
+	local rake = Workspace:FindFirstChild("Rake")
+	local rakeHRP = rake and rake:FindFirstChild("HumanoidRootPart")
+	if not rakeHRP then return false end
+
+	local distance = (rakeHRP.Position - hrp.Position).Magnitude
+	if distance <= dangerDistance then
+		local dir = (hrp.Position - rakeHRP.Position).Unit
+		local target = hrp.Position + dir * 60
+		local result = Workspace:Raycast(target + Vector3.new(0, 50, 0), Vector3.new(0, -100, 0), RaycastParams.new())
+		local newY = (result and result.Position.Y + 3) or target.Y
+		target = Vector3.new(target.X, newY, target.Z)
+		hrp.CFrame = CFrame.new(target)
+		return true
+	end
+	return false
 end
 
+local function moveTo(targetPos)
+	local _, humanoid, hrp = getCharacter()
+	humanoid.WalkSpeed = walkSpeed
 
-local function stepTo(pos)
- local char, humanoid, hrp = getCharacter()
- humanoid.WalkSpeed = 30
+	local path = PathfindingService:CreatePath({
+		AgentRadius = 2,
+		AgentHeight = 5,
+		AgentCanJump = false,
+		AgentCanClimb = false,
+	})
 
- local reached = false
- humanoid:MoveTo(pos)
+	path:ComputeAsync(hrp.Position, targetPos)
+	if path.Status ~= Enum.PathStatus.Success then return false end
 
- humanoid.MoveToFinished:Connect(function(success)
-  reached = success
- end)
+	for _, wp in ipairs(path:GetWaypoints()) do
+		local start = hrp.Position
+		local finish = wp.Position
+		local dist = (finish - start).Magnitude
+		local duration = dist / walkSpeed
+		local startTime = tick()
 
- while not reached do
-  if isRakeNearby() then
-   humanoid:MoveTo(hrp.Position) -- cancel movement
-   return false
-  end
-  task.wait(0.05)
- end
+		while tick() - startTime < duration do
+			if isRakeNearby() then return false end
+			local alpha = (tick() - startTime) / duration
+			local interpolated = start:Lerp(finish, math.clamp(alpha, 0, 1))
+			hrp.CFrame = CFrame.new(interpolated)
+			RunService.Heartbeat:Wait()
+		end
 
- return true
+		hrp.CFrame = CFrame.new(finish)
+	end
+
+	return true
 end
-
-local walkSpeed = 27 -- You can dynamically read this too
-local function getCharacter()
-    local plr = game.Players.LocalPlayer
-    local char = plr.Character or plr.CharacterAdded:Wait()
-    return char, plr, char:WaitForChild("HumanoidRootPart")
-end
-
-local function moveTo(pos)
-    local _, _, hrp = getCharacter()
-    local path = PathfindingService:CreatePath({
-        AgentRadius = 2,
-        AgentHeight = 5,
-        AgentCanJump = false
-    })
-
-    path:ComputeAsync(hrp.Position, pos)
-    if path.Status ~= Enum.PathStatus.Success then return false end
-
-    local waypoints = path:GetWaypoints()
-    for _, wp in ipairs(waypoints) do
-        local dir = (wp.Position - hrp.Position).Unit
-        local dist = (wp.Position - hrp.Position).Magnitude
-        local duration = dist / walkSpeed
-        local startTime = tick()
-local Runservicenam = game:GetService("RunService")
-        while (tick() - startTime) < duration do
-            local delta = tick() - startTime
-            local progress = math.clamp(delta / duration, 0, 1)
-            local targetPos = hrp.Position:Lerp(wp.Position, progress)
-            hrp.CFrame = CFrame.new(targetPos)
-            Runservicenam.Heartbeat:Wait()
-        end
-
-        -- Snap to exact position at the end
-        hrp.CFrame = CFrame.new(wp.Position)
-    end
-
-    return true
-end
-
 
 local function findScraps()
- local scraps = {}
- for _, folder in pairs(workspace.Filter.ScrapSpawns:GetChildren()) do
-  for _, item in pairs(folder:GetChildren()) do
-   if item:IsA("Model") and item:FindFirstChild("Scrap") and item.Scrap:IsDescendantOf(workspace) then
-    table.insert(scraps, item.Scrap)
-   end
-  end
- end
- return scraps
+	local scraps = {}
+	for _, folder in pairs(Workspace.Filter.ScrapSpawns:GetChildren()) do
+		for _, item in pairs(folder:GetChildren()) do
+			if item:IsA("Model") and item:FindFirstChild("Scrap") and item.Scrap:IsDescendantOf(Workspace) then
+				table.insert(scraps, item.Scrap)
+			end
+		end
+	end
+	return scraps
 end
 
 local function sellScraps()
- local shop = workspace.Map.Shack.Merchant:FindFirstChild("Head")
- if not shop then return end
- moveTo(shop.Position)
- for i = 1, math.random(10, 15), 1 do
-  ReplicatedStorage:WaitForChild("ShopEvent"):FireServer("SellScraps", "Scraps")
- end
- task.wait()
+	local shop = Workspace.Map.Shack.Merchant:FindFirstChild("Head")
+	if not shop then return end
+	moveTo(shop.Position)
+	for _ = 1, math.random(10, 15) do
+		ReplicatedStorage:WaitForChild("ShopEvent"):FireServer("SellScraps", "Scraps")
+	end
+	task.wait()
 end
 
 local function collectScraps()
- local scraps = findScraps()
- for _, scrap in ipairs(scraps) do
-  if not scrap:IsDescendantOf(workspace) then continue end
-  local rake = workspace:FindFirstChild("Rake")
-  if rake and (rake.HumanoidRootPart.Position - scrap.Position).Magnitude < dangerDistance then continue end
-  if isRakeNearby() then continue end
-  local tries = 0
-  while tries < 3 do
-   if moveTo(scrap.Position) then break end
-   if isRakeNearby() then break end
-   tries += 1
-  end
- end
+	local scraps = findScraps()
+	for _, scrap in ipairs(scraps) do
+		if not scrap:IsDescendantOf(Workspace) then continue end
+		local rake = Workspace:FindFirstChild("Rake")
+		if rake and (rake.HumanoidRootPart.Position - scrap.Position).Magnitude < dangerDistance then continue end
+		if isRakeNearby() then continue end
+
+		for attempt = 1, 3 do
+			if moveTo(scrap.Position) then break end
+			if isRakeNearby() then break end
+		end
+	end
 end
 
+-- Bot Threading Logic
 local rakeRunning = false
 local rakeThread
 
 local function startRakeScript()
- if rakeRunning then return end
- if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-  player.CharacterAdded:Wait()
-  task.wait(0.5)
- end
- rakeRunning = true
- rakeThread = task.spawn(function()
-  while rakeRunning do
-   task.wait(0.05)
-   if isRakeNearby() then continue end
-   local isNight = ReplicatedStorage:FindFirstChild("Night") and ReplicatedStorage.Night.Value
-   local scrapFolder = player.Backpack:FindFirstChild("ScrapFolder")
-   local scrapPoints = scrapFolder and scrapFolder:FindFirstChild("Points") and scrapFolder.Points.Value or 0
-   local leaderstats = player:FindFirstChild("leaderstats")
-   local currentPoints = leaderstats and leaderstats:FindFirstChild("Points") and leaderstats.Points.Value or 0
-   if isNight then
-    hasSold = false
-    collectScraps()
-   else
-    if scrapPoints > 0 and currentPoints < 100000 and not hasSold then
-     sellScraps()
-     hasSold = true
-    end
-    collectScraps()
-   end
-  end
- end)
+	if rakeRunning then return end
+	rakeRunning = true
+
+	rakeThread = task.spawn(function()
+		while rakeRunning do
+			task.wait(0.05)
+			if isRakeNearby() then continue end
+
+			local isNight = ReplicatedStorage:FindFirstChild("Night") and ReplicatedStorage.Night.Value
+			local scrapFolder = player.Backpack:FindFirstChild("ScrapFolder")
+			local scrapPoints = scrapFolder and scrapFolder:FindFirstChild("Points") and scrapFolder.Points.Value or 0
+			local leaderstats = player:FindFirstChild("leaderstats")
+			local currentPoints = leaderstats and leaderstats:FindFirstChild("Points") and leaderstats.Points.Value or 0
+
+			if isNight then
+				hasSold = false
+				collectScraps()
+			else
+				if scrapPoints > 0 and currentPoints < 100000 and not hasSold then
+					sellScraps()
+					hasSold = true
+				end
+				collectScraps()
+			end
+		end
+	end)
 end
 
 local function stopRakeScript()
- rakeRunning = false
- if rakeThread and coroutine.status(rakeThread) ~= "dead" then
-  task.cancel(rakeThread)
- end
- rakeThread = nil
+	rakeRunning = false
+	if rakeThread and coroutine.status(rakeThread) ~= "dead" then
+		task.cancel(rakeThread)
+	end
+	rakeThread = nil
 end
 
+-- UI Button Bind
 local rakeBotToggle = false
-local rakeBotButton = _G.Main.createButton(World, "BotPlayer (fast wins + points)", function()
- rakeBotToggle = not rakeBotToggle
- if rakeBotToggle then
-  startRakeScript()
- else
-  stopRakeScript()
- end
+local mainGui = _G.Main -- <- make sure _G.Main exists!
+mainGui.createButton(World, "BotPlayer (fast wins + points)", function()
+	rakeBotToggle = not rakeBotToggle
+	if rakeBotToggle then
+		startRakeScript()
+	else
+		stopRakeScript()
+	end
 end)
-
 
 
 TextButton2.MouseButton1Click:Connect(function()
