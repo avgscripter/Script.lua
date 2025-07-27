@@ -1052,14 +1052,14 @@ local function stepTo(target)
  local dir = (target - hrp.Position).Unit
  while (hrp.Position - target).Magnitude > 2 do
   if isRakeNearby() then return end
-  local step = dir * (walkSpeed / 10)
+  local step = dir * (walkSpeed / 20)
   local nextPos = hrp.Position + step
   local ray = Workspace:Raycast(nextPos + Vector3.new(0, 5, 0), Vector3.new(0, -50, 0), rayParams)
   if ray then
    nextPos = Vector3.new(nextPos.X, ray.Position.Y + 3, nextPos.Z)
   end
   hrp.CFrame = CFrame.new(nextPos)
-  task.wait(0.033)
+  task.wait(0.9)
  end
 end
 
