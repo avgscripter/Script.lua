@@ -1048,33 +1048,26 @@ local function isRakeNearby()
 end
 
 
-local function stepTo(target)
- local _, _, hrp = getCharacter()
- local lastY = hrp.Position.Y
+local function moveTo(pos)
+ local char, humanoid, hrp = getCharacter()
+ humanoid.WalkSpeed = 30
 
- while (hrp.Position - target).Magnitude > 2 do
-  if isRakeNearby() then return end
+ local reached = false
+ humanoid:MoveTo(pos)
 
-  local dir = (target - hrp.Position).Unit
-  local step = dir * (walkSpeed / 100)
-  local nextPos = hrp.Position + step
+ humanoid.MoveToFinished:Connect(function(success)
+  reached = success
+ end)
 
-  local ray = Workspace:Raycast(nextPos + Vector3.new(0, 2, 0), Vector3.new(0, -6, 0), rayParams)
-  if ray then
-   local groundY = ray.Position.Y + 1.2
-   if math.abs(groundY - lastY) <= 1.5 then
-    nextPos = Vector3.new(nextPos.X, groundY, nextPos.Z)
-    lastY = groundY
-   else
-    nextPos = Vector3.new(nextPos.X, lastY, nextPos.Z)
-   end
-  else
-   nextPos = Vector3.new(nextPos.X, lastY, nextPos.Z)
+ while not reached do
+  if isRakeNearby() then
+   humanoid:MoveTo(hrp.Position) -- cancel movement
+   return false
   end
-
-  hrp.CFrame = CFrame.new(nextPos)
-  task.wait(0.035)
+  task.wait(0.05)
  end
+
+ return true
 end
 
 local function moveTo(pos)
