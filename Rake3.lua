@@ -1046,25 +1046,34 @@ local function isRakeNearby()
  end
  return false
 end
+
+
 local function stepTo(target)
  local _, _, hrp = getCharacter()
+ local lastY = hrp.Position.Y
+
  while (hrp.Position - target).Magnitude > 2 do
   if isRakeNearby() then return end
+
   local dir = (target - hrp.Position).Unit
-  local step = dir * (walkSpeed / 100) -- very small and smooth step (~0.3 studs at speed 30)
+  local step = dir * (walkSpeed / 100)
   local nextPos = hrp.Position + step
 
-  -- Ground detection, raycast downward from 3 studs above current step
-  local ray = Workspace:Raycast(nextPos + Vector3.new(0, 3, 0), Vector3.new(0, -10, 0), rayParams)
+  local ray = Workspace:Raycast(nextPos + Vector3.new(0, 2, 0), Vector3.new(0, -6, 0), rayParams)
   if ray then
-   local y = ray.Position.Y -- only lift ~1.5 studs for anti-cheat safety
-   nextPos = Vector3.new(nextPos.X, nextpos.Y, nextPos.Z)
+   local groundY = ray.Position.Y + 1.2
+   if math.abs(groundY - lastY) <= 1.5 then
+    nextPos = Vector3.new(nextPos.X, groundY, nextPos.Z)
+    lastY = groundY
+   else
+    nextPos = Vector3.new(nextPos.X, lastY, nextPos.Z)
+   end
   else
-   nextPos = Vector3.new(nextPos.X, hrp.Position.Y, nextPos.Z) -- stay at same height if ground not found
+   nextPos = Vector3.new(nextPos.X, lastY, nextPos.Z)
   end
 
   hrp.CFrame = CFrame.new(nextPos)
-  task.wait(0.035) -- walk-like timing (~28 FPS), more natural and safe
+  task.wait(0.035)
  end
 end
 
