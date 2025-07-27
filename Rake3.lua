@@ -1070,16 +1070,46 @@ local function stepTo(pos)
  return true
 end
 
-local function moveTo(pos)
- local _, _, hrp = getCharacter()
- local path = PathfindingService:CreatePath({AgentRadius = 2, AgentHeight = 5, AgentCanJump = false})
- path:ComputeAsync(hrp.Position, pos)
- if path.Status ~= Enum.PathStatus.Success then return false end
- for _, wp in ipairs(path:GetWaypoints()) do
-  stepTo(wp.Position)
- end
- return true
+local walkSpeed = 27 -- You can dynamically read this too
+local function getCharacter()
+    local plr = game.Players.LocalPlayer
+    local char = plr.Character or plr.CharacterAdded:Wait()
+    return char, plr, char:WaitForChild("HumanoidRootPart")
 end
+
+local function moveTo(pos)
+    local _, _, hrp = getCharacter()
+    local path = PathfindingService:CreatePath({
+        AgentRadius = 2,
+        AgentHeight = 5,
+        AgentCanJump = false
+    })
+
+    path:ComputeAsync(hrp.Position, pos)
+    if path.Status ~= Enum.PathStatus.Success then return false end
+
+    local waypoints = path:GetWaypoints()
+    for _, wp in ipairs(waypoints) do
+        local dir = (wp.Position - hrp.Position).Unit
+        local dist = (wp.Position - hrp.Position).Magnitude
+        local duration = dist / walkSpeed
+        local startTime = tick()
+
+        while (tick() - startTime) < duration do
+            local delta = tick() - startTime
+            local progress = math.clamp(delta / duration, 0, 1)
+            local targetPos = hrp.Position:Lerp(wp.Position, progress)
+            hrp.CFrame = CFrame.new(targetPos)
+            RunService.Heartbeat:Wait()
+        end
+
+        -- Snap to exact position at the end
+        hrp.CFrame = CFrame.new(wp.Position)
+    end
+
+    return true
+end
+
 
 local function findScraps()
  local scraps = {}
