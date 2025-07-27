@@ -1046,7 +1046,7 @@ local function isRakeNearby()
  end
  return false
 end
-local function stepTo(target)
+
 local function stepTo(target)
  local _, _, hrp = getCharacter()
  while (hrp.Position - target).Magnitude > 2 do
