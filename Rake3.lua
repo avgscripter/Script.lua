@@ -1048,7 +1048,7 @@ local function isRakeNearby()
 end
 
 
-local function moveTo(pos)
+local function stepTo(pos)
  local char, humanoid, hrp = getCharacter()
  humanoid.WalkSpeed = 30
 
