@@ -1008,18 +1008,38 @@ _G.Main.createButton(Visuals, "Show Info (Target/Power/Timer)", function()
  end
 end)
 
+--[[
+    Rake Bot Script - Safe Movement
+    Last Updated: July 21, 2024
 
+    Changelog:
+    - Set walkSpeed back to 30 as requested.
+    - Replaced CFrame teleportation with Humanoid:MoveTo() for escaping the Rake.
+      This creates a more natural movement and avoids teleport flags.
+    - Updated the primary moveTo() function to use Humanoid:MoveTo() for all pathfinding.
+      This ensures the character respects walls and other obstacles, preventing anti-cheat flags for clipping.
+    - Added a dedicated handleRake() function to manage escape logic cleanly.
+    - Integrated the rake handling into all movement and action loops to ensure the bot prioritizes survival.
+]]
+
+-- Services
 local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 
+-- Configuration
 local player = Players.LocalPlayer
-local walkSpeed = 30
+local walkSpeed = 30 -- Standard walk speed
 local dangerDistance = 60
 local hasSold = false
 
+-- Forward declaration for functions that call each other
+local handleRake
+local moveTo
+
+-- Utility function to get character components
 local function getCharacter()
 	local character = player.Character or player.CharacterAdded:Wait()
 	local humanoid = character:WaitForChild("Humanoid")
@@ -1027,94 +1047,128 @@ local function getCharacter()
 	return character, humanoid, hrp
 end
 
+-- Checks if the Rake is within the defined danger distance
 local function isRakeNearby()
 	local _, _, hrp = getCharacter()
 	local rake = Workspace:FindFirstChild("Rake")
 	local rakeHRP = rake and rake:FindFirstChild("HumanoidRootPart")
-	if not rakeHRP then return false end
+
+	if not rakeHRP then return false, nil end
 
 	local distance = (rakeHRP.Position - hrp.Position).Magnitude
-	if distance <= dangerDistance then
-		local dir = (hrp.Position - rakeHRP.Position).Unit
-		local target = hrp.Position + dir * 60
-		local result = Workspace:Raycast(target + Vector3.new(0, 50, 0), Vector3.new(0, -100, 0), RaycastParams.new())
-		local newY = (result and result.Position.Y + 3) or target.Y
-		target = Vector3.new(target.X, newY, target.Z)
-		hrp.CFrame = CFrame.new(target)
-		return true
-	end
-	return false
+	return distance <= dangerDistance, rakeHRP
 end
 
-local function moveTo(targetPos)
+--[[
+    New Movement Function:
+    This function now uses Humanoid:MoveTo() for each waypoint. This is crucial
+    because it respects game physics and collisions, preventing the character
+    from walking through invisible walls or other obstacles.
+]]
+moveTo = function(targetPos)
 	local _, humanoid, hrp = getCharacter()
-	humanoid.WalkSpeed = walkSpeed
+	humanoid.WalkSpeed = walkSpeed -- This line ensures the speed is always set to the value of the walkSpeed variable
 
 	local path = PathfindingService:CreatePath({
-		AgentRadius = 2,
-		AgentHeight = 5,
-		AgentCanJump = false,
-		AgentCanClimb = false,
+		AgentRadius = 3,
+		AgentHeight = 6,
+		AgentCanJump = true, -- Allow jumping to get over small obstacles
 	})
 
+	-- Compute the path from the character's current position to the target
 	path:ComputeAsync(hrp.Position, targetPos)
-	if path.Status ~= Enum.PathStatus.Success then return false end
 
-	for _, wp in ipairs(path:GetWaypoints()) do
-		local start = hrp.Position
-		local finish = wp.Position
-		local dist = (finish - start).Magnitude
-		local duration = dist / walkSpeed
-		local startTime = tick()
+	if path.Status ~= Enum.PathStatus.Success then
+		--warn("Pathfinding failed: Cannot reach the destination.")
+		return false
+	end
 
-		while tick() - startTime < duration do
-			if isRakeNearby() then return false end
-			local alpha = (tick() - startTime) / duration
-			local interpolated = start:Lerp(finish, math.clamp(alpha, 0, 1))
-			hrp.CFrame = CFrame.new(interpolated)
-			RunService.Heartbeat:Wait()
+	local waypoints = path:GetWaypoints()
+	for _, waypoint in ipairs(waypoints) do
+		-- Before moving to the next waypoint, check for the Rake
+		if handleRake() then
+			--warn("Movement interrupted by Rake.")
+			return false -- Stop current path if Rake is spotted
 		end
 
-		hrp.CFrame = CFrame.new(finish)
+		humanoid:MoveTo(waypoint.Position)
+		local moveSuccess = humanoid.MoveToFinished:Wait(5) -- Wait up to 5 seconds per waypoint
+
+		if not moveSuccess then
+			--warn("MoveTo timed out or was interrupted. Stopping current path.")
+			return false
+		end
 	end
 
 	return true
 end
 
+--[[
+    New Rake Handling Function:
+    Instead of teleporting, this function calculates a safe position away from the Rake
+    and then calls the robust moveTo() function to walk there safely.
+]]
+handleRake = function()
+	local isNear, rakeHRP = isRakeNearby()
+	if not isNear then return false end -- Not in danger, do nothing
+
+	--print("Rake spotted! Moving to a safe position.")
+	local _, _, hrp = getCharacter()
+
+	-- Calculate a direction pointing directly away from the Rake
+	local escapeVector = (hrp.Position - rakeHRP.Position).Unit
+	-- Calculate a target position that is a safe distance away
+	local escapeTargetPos = hrp.Position + escapeVector * (dangerDistance + 20)
+
+	-- Use the main movement function to safely navigate to the escape point
+	moveTo(escapeTargetPos)
+
+	return true -- Return true to indicate an escape maneuver was performed
+end
+
+
+-- Finds all available scraps in the workspace
 local function findScraps()
 	local scraps = {}
-	for _, folder in pairs(Workspace.Filter.ScrapSpawns:GetChildren()) do
-		for _, item in pairs(folder:GetChildren()) do
-			if item:IsA("Model") and item:FindFirstChild("Scrap") and item.Scrap:IsDescendantOf(Workspace) then
-				table.insert(scraps, item.Scrap)
+	pcall(function()
+		for _, folder in pairs(Workspace.Filter.ScrapSpawns:GetChildren()) do
+			for _, item in pairs(folder:GetChildren()) do
+				if item:IsA("Model") and item:FindFirstChild("Scrap") and item.Scrap:IsDescendantOf(Workspace) then
+					table.insert(scraps, item.Scrap)
+				end
 			end
 		end
-	end
+	end)
 	return scraps
 end
 
+-- Sells all scraps at the merchant
 local function sellScraps()
 	local shop = Workspace.Map.Shack.Merchant:FindFirstChild("Head")
 	if not shop then return end
-	moveTo(shop.Position)
-	for _ = 1, math.random(10, 15) do
-		ReplicatedStorage:WaitForChild("ShopEvent"):FireServer("SellScraps", "Scraps")
+
+	if moveTo(shop.Position) then
+		--print("Successfully moved to shop. Selling scraps.")
+		for _ = 1, math.random(10, 15) do
+			ReplicatedStorage:WaitForChild("ShopEvent"):FireServer("SellScraps", "Scraps")
+			task.wait()
+		end
 	end
-	task.wait()
+	task.wait(1)
 end
 
+-- Main logic for collecting scraps
 local function collectScraps()
 	local scraps = findScraps()
 	for _, scrap in ipairs(scraps) do
-		if not scrap:IsDescendantOf(Workspace) then continue end
-		local rake = Workspace:FindFirstChild("Rake")
-		if rake and (rake.HumanoidRootPart.Position - scrap.Position).Magnitude < dangerDistance then continue end
-		if isRakeNearby() then continue end
+		if not scrap or not scrap:IsDescendantOf(Workspace) then continue end
+		
+		-- Priority check: Handle Rake before doing anything else
+		if handleRake() then continue end
 
-		for attempt = 1, 3 do
-			if moveTo(scrap.Position) then break end
-			if isRakeNearby() then break end
-		end
+		-- Move to the scrap's position and collect it
+		moveTo(scrap.Position)
+		task.wait(0.1) -- Small delay after reaching a scrap
 	end
 end
 
@@ -1128,20 +1182,25 @@ local function startRakeScript()
 
 	rakeThread = task.spawn(function()
 		while rakeRunning do
-			task.wait(0.05)
-			if isRakeNearby() then continue end
+			task.wait(0.1) -- Main loop delay
 
+			-- The most important check: if the Rake is near, handle it and skip other logic for this cycle.
+			if handleRake() then
+				--print("Escaping Rake, pausing other activities.")
+				task.wait(1) -- Pause for a moment after escaping
+				continue
+			end
+
+			-- Check game state
 			local isNight = ReplicatedStorage:FindFirstChild("Night") and ReplicatedStorage.Night.Value
 			local scrapFolder = player.Backpack:FindFirstChild("ScrapFolder")
 			local scrapPoints = scrapFolder and scrapFolder:FindFirstChild("Points") and scrapFolder.Points.Value or 0
-			local leaderstats = player:FindFirstChild("leaderstats")
-			local currentPoints = leaderstats and leaderstats:FindFirstChild("Points") and leaderstats.Points.Value or 0
-
+			
 			if isNight then
 				hasSold = false
 				collectScraps()
-			else
-				if scrapPoints > 0 and currentPoints < 100000 and not hasSold then
+			else -- It's daytime
+				if scrapPoints > 0 and not hasSold then
 					sellScraps()
 					hasSold = true
 				end
@@ -1149,6 +1208,7 @@ local function startRakeScript()
 			end
 		end
 	end)
+	--print("Rake Bot Started.")
 end
 
 local function stopRakeScript()
@@ -1157,19 +1217,23 @@ local function stopRakeScript()
 		task.cancel(rakeThread)
 	end
 	rakeThread = nil
+	--print("Rake Bot Stopped.")
 end
 
 -- UI Button Bind
-local rakeBotToggle = false
-local mainGui = _G.Main -- <- make sure _G.Main exists!
-mainGui.createButton(World, "BotPlayer (fast wins + points)", function()
-	rakeBotToggle = not rakeBotToggle
-	if rakeBotToggle then
-		startRakeScript()
-	else
-		stopRakeScript()
-	end
+pcall(function()
+    local rakeBotToggle = false
+    local mainGui = _G.Main -- <- make sure _G.Main exists!
+    mainGui.createButton(World, "BotPlayer (Safe)", function()
+    	rakeBotToggle = not rakeBotToggle
+    	if rakeBotToggle then
+    		startRakeScript()
+    	else
+    		stopRakeScript()
+    	end
+    end)
 end)
+
 
 
 TextButton2.MouseButton1Click:Connect(function()
