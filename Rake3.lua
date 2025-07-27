@@ -1060,7 +1060,7 @@ local function isRakeNearby()
 		local result = Workspace:Raycast(target + Vector3.new(0, 50, 0), Vector3.new(0, -100, 0), RaycastParams.new())
 		local newY = (result and result.Position.Y + 3) or target.Y
 		target = Vector3.new(target.X, newY, target.Z)
-		hrp.CFrame = CFrame.new(target)
+		moveTo(target)
 		return true
 	end
 	return false
