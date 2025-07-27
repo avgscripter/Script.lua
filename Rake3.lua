@@ -1046,7 +1046,6 @@ local function isRakeNearby()
  end
  return false
 end
-
 local function stepTo(target)
  local _, _, hrp = getCharacter()
  while (hrp.Position - target).Magnitude > 2 do
@@ -1068,8 +1067,6 @@ local function stepTo(target)
   task.wait(0.035) -- walk-like timing (~28 FPS), more natural and safe
  end
 end
-
-
 
 local function moveTo(pos)
  local _, _, hrp = getCharacter()
